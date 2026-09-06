@@ -1,4 +1,4 @@
-const CACHE='jeju-planner-shell-v2';
+const CACHE='jeju-planner-shell-v3';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',(e)=>{
@@ -19,14 +19,12 @@ self.addEventListener('fetch',(e)=>{
   if(e.request.method!=='GET'||url.origin!==self.location.origin){
     return;
   }
+  // 네트워크 우선: 온라인이면 항상 최신 파일을 받아오고, 오프라인일 때만 캐시를 사용합니다.
   e.respondWith(
-    caches.match(e.request).then((cached)=>{
-      const fetchPromise=fetch(e.request).then((res)=>{
-        const resClone=res.clone();
-        caches.open(CACHE).then((c)=>c.put(e.request,resClone));
-        return res;
-      }).catch(()=>cached);
-      return cached||fetchPromise;
-    })
+    fetch(e.request).then((res)=>{
+      const resClone=res.clone();
+      caches.open(CACHE).then((c)=>c.put(e.request,resClone));
+      return res;
+    }).catch(()=>caches.match(e.request))
   );
 });

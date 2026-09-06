@@ -790,6 +790,14 @@ document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에
 })();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+  // 새 버전의 서비스워커가 화면 제어를 넘겨받으면(업데이트 배포 시) 자동으로 새로고침해서
+  // 홈 화면 아이콘으로 열었을 때도 항상 최신 화면이 보이도록 합니다.
+  let swRefreshed=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(swRefreshed)return;
+    swRefreshed=true;
+    window.location.reload();
+  });
 }
 </script>
 </body>
