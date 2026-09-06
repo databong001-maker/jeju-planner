@@ -141,7 +141,8 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
       </div>
       <label>주소, 숙소 이름, 또는 구글맵 링크</label>
       <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
-      <p class="small">주소나 이름을 적으면 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
+      <button class="btn green" id="stayMapSearchBtn" type="button" style="width:100%;margin:9px 0">🔍 구글맵에서 검색</button>
+      <p class="small">위 버튼을 누르면 입력한 이름/주소로 구글맵 검색이 새 탭에서 열려요. 원하는 장소를 찾으면 <b>공유 → 링크 복사</b> 후 이 입력창에 붙여넣어주세요. 주소나 이름을 그냥 적어도 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
       <input type="hidden" id="stayEditId">
       <div class="actions" style="margin-top:8px">
         <button class="btn" id="cancelStayBtn" type="button">취소</button>
@@ -154,7 +155,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 </section>
 
 <section id="schedule" class="section">
-  <h2 class="title" id="scheduleTitle">일정</h2><p class="sub">하루에 하나의 메인 올레 코스를 배정하고, 휴식일·자유일도 직접 넣을 수 있어요. 주차를 눌러 펼치고 접을 수 있어요.</p>
+  <h2 class="title" id="scheduleTitle">일정</h2><p class="sub">하루에 하나의 메인 올레 코스를 배정하고, 휴식일·자유일도 직접 넣을 수 있어요. 등록한 숙소 기간이 자동으로 표시되고, 숙소가 바뀌는 날은 '이동일'로 안내돼요.</p>
   <div class="actions"><button class="btn primary" id="autoScheduleBtn">계획 코스 자동 배정</button><button class="btn" id="clearScheduleBtn">일정 비우기</button></div>
   <div id="scheduleList" style="margin-top:12px"></div>
 </section>
@@ -426,6 +427,8 @@ function renderDday(){
 }
 let openWeeks = {}; // each week's expand state is independent; all weeks start collapsed
 
+function dateStrForDay(i){const d=new Date(profile.departure+'T00:00:00');d.setDate(d.getDate()+i-1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function stayForDate(dateStr){return (profile.stays||[]).find(s=>s.checkin&&s.checkout&&dateStr>=s.checkin&&dateStr<=s.checkout)||null}
 function renderSchedule(){
  const wrap=document.getElementById('scheduleList');wrap.innerHTML='';
  const days=profile.days||21;
@@ -437,11 +440,13 @@ function renderSchedule(){
   const rangeStr=`${sd.getMonth()+1}/${sd.getDate()} ~ ${ed.getMonth()+1}/${ed.getDate()}`;
   let olleCount=0;
   for(let i=startDay;i<=endDay;i++) if(profile.schedule[i] && profile.schedule[i].type==='olle' && profile.schedule[i].course) olleCount++;
+  const weekStayNames=[...new Set([...Array(endDay-startDay+1)].map((_,k)=>{const s=stayForDate(dateStrForDay(startDay+k));return s?s.name:null}).filter(Boolean))];
+  const weekStayStr=weekStayNames.length?` · 🏠 ${weekStayNames.map(esc).join(', ')}`:'';
 
   const isOpen = !!openWeeks[w];
   const head=document.createElement('div');
   head.className='week-head'+(isOpen?' open':'');
-  head.innerHTML=`<span><b>${w}주차</b><span class="wrange">${rangeStr}</span></span><span><span class="wcount">${olleCount}일 올레</span><span class="chev">${isOpen?'▲':'▼'}</span></span>`;
+  head.innerHTML=`<span><b>${w}주차</b><span class="wrange">${rangeStr}${weekStayStr}</span></span><span><span class="wcount">${olleCount}일 올레</span><span class="chev">${isOpen?'▲':'▼'}</span></span>`;
   head.onclick=()=>{ openWeeks[w] = !openWeeks[w]; renderSchedule(); };
   wrap.appendChild(head);
 
@@ -452,9 +457,17 @@ function renderSchedule(){
   for(let i=startDay;i<=endDay;i++){
    const item=profile.schedule[i]||{type:'rest',course:'',note:''},date=new Date(profile.departure+'T00:00:00');date.setDate(date.getDate()+i-1);
    const ds=`${date.getMonth()+1}/${date.getDate()}`;
+   const dateStr=dateStrForDay(i);
+   const stay=stayForDate(dateStr);
+   const prevStay=i>1?stayForDate(dateStrForDay(i-1)):null;
+   const isMoveDay=!!stay&&(!prevStay||prevStay.id!==stay.id)&&i>1;
+   const hasSaved=!!profile.schedule[i];
+   const defaultType=(!hasSaved&&isMoveDay)?'move':item.type;
+   const stayBadge=stay?`<span class="badge" style="background:var(--purple);color:#fff">🏠 ${esc(stay.name)}</span>`:'';
+   const moveBadge=isMoveDay?`<span class="badge" style="background:var(--blue);color:#fff">🚍 이동일</span>`:'';
    const div=document.createElement('div');div.className='schedule-day';
    const options=courses.filter(c=>profile.plan.includes('course-'+c.n)).map(c=>`<option value="${esc(c.n)}" ${item.course===c.n?'selected':''}>올레 ${esc(c.n)} · ${esc(c.name)}</option>`).join('');
-   div.innerHTML=`<div class="day-head"><strong>DAY ${i} · ${ds}</strong></div><div class="day-body"><select class="type"><option value="rest" ${item.type==='rest'?'selected':''}>☕ 휴식 / 자유일</option><option value="olle" ${item.type==='olle'?'selected':''}>🥾 올레길</option><option value="move" ${item.type==='move'?'selected':''}>🚍 이동 / 숙소 변경</option><option value="food" ${item.type==='food'?'selected':''}>🍽 맛집 / 관광</option></select><div class="day-row"><select class="courseSel" ${item.type!=='olle'?'disabled':''}><option value="">계획 코스 선택</option>${options}</select><button class="btn">저장</button></div><input class="note" placeholder="이 날의 메모" value="${esc(item.note||'')}"><div class="day-course">${item.course?`현재 배정: 올레 ${esc(item.course)} · ${esc((courses.find(c=>c.n===item.course)||{}).name||'')}`:'메인 코스 없음'}</div></div>`;
+   div.innerHTML=`<div class="day-head"><strong>DAY ${i} · ${ds}</strong><span>${stayBadge}${moveBadge}</span></div><div class="day-body"><select class="type"><option value="rest" ${defaultType==='rest'?'selected':''}>☕ 휴식 / 자유일</option><option value="olle" ${defaultType==='olle'?'selected':''}>🥾 올레길</option><option value="move" ${defaultType==='move'?'selected':''}>🚍 이동 / 숙소 변경</option><option value="food" ${defaultType==='food'?'selected':''}>🍽 맛집 / 관광</option></select><div class="day-row"><select class="courseSel" ${defaultType!=='olle'?'disabled':''}><option value="">계획 코스 선택</option>${options}</select><button class="btn">저장</button></div><input class="note" placeholder="이 날의 메모" value="${esc(item.note||'')}"><div class="day-course">${item.course?`현재 배정: 올레 ${esc(item.course)} · ${esc((courses.find(c=>c.n===item.course)||{}).name||'')}`:'메인 코스 없음'}</div></div>`;
    const type=div.querySelector('.type'),cs=div.querySelector('.courseSel'),saveBtn=div.querySelector('.day-row button');
    type.onchange=()=>{cs.disabled=type.value!=='olle';};
    saveBtn.onclick=()=>{profile.schedule[i]={type:type.value,course:type.value==='olle'?cs.value:'',note:div.querySelector('.note').value};if(profile.schedule[i].course&&!profile.plan.includes('course-'+profile.schedule[i].course))profile.plan.push('course-'+profile.schedule[i].course);save();renderAll();openWeeks[w]=true;showTab('schedule');toast('DAY '+i+' 저장됨')};
@@ -539,6 +552,12 @@ function openStayForm(editId){
 function closeStayForm(){document.getElementById('stayForm').classList.add('hidden')}
 document.getElementById('addStayBtn').onclick=()=>openStayForm(null);
 document.getElementById('cancelStayBtn').onclick=()=>closeStayForm();
+document.getElementById('stayMapSearchBtn').onclick=()=>{
+ const locText=document.getElementById('stayLocation').value.trim();
+ const name=document.getElementById('stayName').value.trim();
+ const q=encodeURIComponent((locText||name||'')+' 제주');
+ window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
+};
 document.getElementById('saveStayBtn').onclick=async()=>{
  const editId=document.getElementById('stayEditId').value||null;
  const name=document.getElementById('stayName').value.trim()||('숙소'+((profile.stays||[]).length+1));
