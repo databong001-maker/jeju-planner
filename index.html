@@ -128,7 +128,28 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <p class="small" id="periodSummary" style="margin:8px 0 0"></p>
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="todayBtn">오늘을 시작일로</button><button class="btn" id="sampleBtn">샘플 일정 만들기</button></div>
   </div>
-  <div class="card"><b>빠른 안내</b><p class="small">① 위에서 제주살이 기간을 정해요 → ② 올레길에서 '이번 여행 계획'을 선택 → ③ 일정 탭에서 주차를 눌러 펼치고 날짜별 코스를 배정 → ④ 지도에서 전체 흐름 확인 → ⑤ 숙소와 메모 저장</p></div>
+  <div class="card" id="staysCard">
+    <b>숙소</b><p class="small" style="margin:4px 0 10px">머무는 숙소를 기간별로 등록해두면 일정에 자동 반영돼요.</p>
+    <div id="staysList"></div>
+    <button class="btn primary" id="addStayBtn" type="button" style="width:100%;margin-top:6px">+ 숙소 추가</button>
+    <div id="stayForm" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+      <label>숙소 이름</label>
+      <input id="stayName" placeholder="예: 숙소1">
+      <div class="grid2">
+        <div><label>체크인</label><input type="date" id="stayCheckin"></div>
+        <div><label>체크아웃</label><input type="date" id="stayCheckout"></div>
+      </div>
+      <label>주소, 숙소 이름, 또는 구글맵 링크</label>
+      <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
+      <p class="small">주소나 이름을 적으면 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
+      <input type="hidden" id="stayEditId">
+      <div class="actions" style="margin-top:8px">
+        <button class="btn" id="cancelStayBtn" type="button">취소</button>
+        <button class="btn primary" id="saveStayBtn" type="button">저장</button>
+      </div>
+    </div>
+  </div>
+  <div class="card"><b>빠른 안내</b><p class="small">① 위에서 제주살이 기간을 정해요 → ② 숙소를 등록해요 → ③ 올레길에서 '이번 여행 계획'을 선택 → ④ 일정 탭에서 주차를 눌러 펼치고 날짜별 코스를 배정 → ⑤ 지도에서 전체 흐름 확인 → ⑥ 메모 저장</p></div>
   <div class="actions"><button class="btn" id="exportBtn">백업 내보내기</button><button class="btn" id="importBtn">백업 불러오기</button><button class="btn danger" id="resetBtn">전체 초기화</button><input id="importFile" type="file" accept=".json" class="hidden"></div>
 </section>
 
@@ -245,11 +266,11 @@ try{
 (function(){
 'use strict';
 const KEY='jeju3weeks.v3';
-const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,customPlaces:[],schedule:{}};
+const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,stays:[],customPlaces:[],schedule:{}};
 let profile=Object.assign({},DEFAULT);
 let currentUser=null;
 
-function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
+function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],stays:Array.isArray(x.stays)?x.stays:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
 function withTimeout(promise,ms){
   return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]);
 }
@@ -465,6 +486,96 @@ function renderMap(){
  courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'#8A8272':plan?'#3A6EA5':'#C0483A';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
 }
 function renderStay(){document.querySelectorAll('[data-stay]').forEach(b=>{const on=profile.stay&&profile.stay.region===b.dataset.stay;b.textContent=on?'✓ 숙소 후보로 선택됨':'이 지역을 숙소 후보로';b.classList.toggle('green',on)});document.getElementById('staySummary').textContent=profile.stay?'현재 숙소 후보: '+profile.stay.label:'현재 숙소 후보: 없음'}
+
+function fmtMD(s){if(!s)return '?';const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`}
+function nightsBetween(a,b){if(!a||!b)return null;const d1=new Date(a+'T00:00:00'),d2=new Date(b+'T00:00:00');return Math.round((d2-d1)/86400000)}
+function renderStays(){
+ const list=document.getElementById('staysList');
+ const stays=(profile.stays||[]).slice().sort((a,b)=>(a.checkin||'').localeCompare(b.checkin||''));
+ if(!stays.length){list.innerHTML='<p class="small">아직 등록된 숙소가 없어요. 아래 버튼으로 추가해보세요.</p>';return}
+ list.innerHTML=stays.map(s=>{
+  const n=nightsBetween(s.checkin,s.checkout);
+  const range=`${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}${n!==null?` · ${n}박`:''}`;
+  const locTxt=s.lat!=null?'📍 위치 확인됨':'📍 위치 미확인';
+  return `<div class="course" style="align-items:center">
+    <div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div>
+    <div style="flex:1">
+      <h3>${esc(s.name)}</h3>
+      <div class="meta">${range} · ${locTxt}</div>
+    </div>
+    <div class="actions" style="margin-top:0">
+      <button class="btn" data-edit-stay="${s.id}" type="button">✎</button>
+      <button class="btn danger" data-del-stay="${s.id}" type="button">✕</button>
+    </div>
+  </div>`;
+ }).join('');
+ list.querySelectorAll('[data-edit-stay]').forEach(b=>b.onclick=()=>openStayForm(b.dataset.editStay));
+ list.querySelectorAll('[data-del-stay]').forEach(b=>b.onclick=()=>{
+  if(!confirm('이 숙소를 삭제할까요?'))return;
+  profile.stays=(profile.stays||[]).filter(s=>s.id!==b.dataset.delStay);
+  save();renderStays();toast('숙소를 삭제했습니다');
+ });
+}
+function openStayForm(editId){
+ const form=document.getElementById('stayForm');
+ form.classList.remove('hidden');
+ document.getElementById('stayEditId').value=editId||'';
+ if(editId){
+  const s=(profile.stays||[]).find(x=>x.id===editId);
+  if(s){
+   document.getElementById('stayName').value=s.name||'';
+   document.getElementById('stayCheckin').value=s.checkin||'';
+   document.getElementById('stayCheckout').value=s.checkout||'';
+   document.getElementById('stayLocation').value=s.rawLocation||'';
+  }
+ }else{
+  document.getElementById('stayName').value='숙소'+((profile.stays||[]).length+1);
+  document.getElementById('stayCheckin').value='';
+  document.getElementById('stayCheckout').value='';
+  document.getElementById('stayLocation').value='';
+ }
+ document.getElementById('stayForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function closeStayForm(){document.getElementById('stayForm').classList.add('hidden')}
+document.getElementById('addStayBtn').onclick=()=>openStayForm(null);
+document.getElementById('cancelStayBtn').onclick=()=>closeStayForm();
+document.getElementById('saveStayBtn').onclick=async()=>{
+ const editId=document.getElementById('stayEditId').value||null;
+ const name=document.getElementById('stayName').value.trim()||('숙소'+((profile.stays||[]).length+1));
+ const checkin=document.getElementById('stayCheckin').value;
+ const checkout=document.getElementById('stayCheckout').value;
+ const locRaw=document.getElementById('stayLocation').value.trim();
+ const btn=document.getElementById('saveStayBtn');
+
+ if(!checkin||!checkout){toast('체크인/체크아웃 날짜를 입력해주세요');return}
+ if(checkin>checkout){toast('체크아웃 날짜가 체크인보다 빠를 수 없어요');return}
+
+ let lat=null,lng=null;
+ if(editId){const prev=(profile.stays||[]).find(x=>x.id===editId);if(prev){lat=prev.lat??null;lng=prev.lng??null}}
+ if(locRaw){
+  btn.disabled=true;btn.textContent='위치 찾는 중…';
+  try{
+   const coord=await resolveLocation(locRaw);
+   if(coord){lat=coord[0];lng=coord[1]}
+   else toast('위치를 찾지 못했어요. 이름·날짜만 먼저 저장할게요.');
+  }catch(e){toast('위치 검색 서버에 연결하지 못했어요. 이름·날짜만 먼저 저장할게요.')}
+  btn.disabled=false;btn.textContent='저장';
+ }
+
+ const others=(profile.stays||[]).filter(s=>s.id!==editId);
+ const overlap=others.some(s=>checkin<=s.checkout&&checkout>=s.checkin);
+ if(overlap)toast('다른 숙소와 날짜가 겹쳐요. 확인해주세요 (저장은 됐어요)');
+
+ if(editId){
+  const idx=(profile.stays||[]).findIndex(s=>s.id===editId);
+  if(idx>-1)profile.stays[idx]={...profile.stays[idx],name,checkin,checkout,lat,lng,rawLocation:locRaw};
+ }else{
+  profile.stays=profile.stays||[];
+  profile.stays.push({id:'s'+Date.now()+Math.random().toString(36).slice(2,6),name,checkin,checkout,lat,lng,rawLocation:locRaw});
+ }
+ save();renderStays();closeStayForm();
+ if(!overlap)toast('숙소를 저장했습니다');
+};
 function renderPlaces(){
   const l=document.getElementById('customPlaceList');
   l.innerHTML=(profile.customPlaces||[]).map((p,i)=>{
@@ -519,7 +630,7 @@ function renderPeriod(){
  document.getElementById('periodSummary').textContent=`${fmt(sd)} ~ ${fmt(ed)} · 총 ${profile.days}일 (${weeks}주차까지)`;
  updateScheduleLabels();
 }
-function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStay();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
+function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStay();renderStays();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -673,7 +784,7 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
 };
 document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jeju-3weeks-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일을 만들었습니다')};
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
-document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
+document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
 document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에 저장된 제주 여행 데이터를 모두 초기화할까요?')){profile=Object.assign({},DEFAULT);save();renderAll();toast('초기화했습니다')}};
 
 })();
