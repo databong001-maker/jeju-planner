@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#26221C">
+<title>제주살이 플래너 · Travel Planner p-v1</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#26221C">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="제주플래너">
+<style>
+:root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--stone);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;line-height:1.5}.app{max-width:760px;margin:auto;padding-bottom:80px}
+header{background:var(--ink);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}
+.eyebrow{margin:0 0 5px;color:var(--orange);font-size:12px;font-weight:800;letter-spacing:.08em}.hero{display:flex;justify-content:space-between;gap:14px;align-items:end}.hero h1{font-family:Georgia,serif;font-size:30px;line-height:1.1;margin:0 0 8px}.hero p{margin:0;color:#eee9dc;font-size:13px}.stamp{min-width:64px;height:64px;border:2px solid var(--orange);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-5deg);z-index:1}.stamp b{font:700 17px Georgia;color:var(--orange);line-height:1}.stamp span{font-size:9px;margin-top:3px}
+nav{display:flex;overflow:auto;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}nav button{flex:0 0 auto;min-width:75px;border:0;background:transparent;padding:13px 9px;color:#88806e;font-weight:750;font-size:12px;border-bottom:2px solid transparent}nav button.active{color:var(--ink);border-bottom-color:var(--orange)}
+main{padding:18px}.section{display:none}.section.active{display:block}.title{font:600 21px Georgia,serif;margin:2px 0 3px}.sub{font-size:12px;color:var(--muted);margin:0 0 15px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:15px;margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.stat{padding:12px;border:1px solid var(--line);background:var(--white);border-radius:7px}.stat b{display:block;font-size:22px}.stat span{font-size:11px;color:var(--muted)}
+.progress{height:8px;background:var(--stone2);border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--sea);width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:8px 11px;border-radius:20px;font-weight:750;font-size:12px;cursor:pointer}.btn.primary{background:var(--orange);border-color:var(--orange);color:white}.btn.blue{background:var(--blue);border-color:var(--blue);color:white}.btn.green{background:var(--sea);border-color:var(--sea);color:white}.btn.danger{color:var(--red)}
+.banner{background:#FBE9D6;color:#A95B20;border-radius:7px;padding:11px 13px;font-size:12px;font-weight:700;margin-bottom:12px}
+.pref-btn.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.dur-btn.active{background:var(--sea);border-color:var(--sea);color:#fff}
+.course{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:13px;margin-bottom:9px;display:flex;gap:12px}.num{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--sea);display:grid;place-items:center;color:var(--sea);font:700 13px Georgia;flex:0 0 auto}.course.done{border-left:3px solid var(--sea)}.course.planned{border-left:3px solid var(--blue)}.course.done .num{background:var(--sea);color:white}.course h3{font-size:14px;margin:0}.meta{font-size:11px;color:#8a8272;margin:3px 0 6px}.desc{font-size:12px;color:#4b473b;margin:0}.badge{display:inline-block;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:800;margin-right:5px}.lo{background:#E4EEDF;color:var(--green)}.mid{background:#FBE9D6;color:var(--orange)}.hi{background:#F5DCD6;color:#B0503C}
+.course .actions{margin-top:8px}.course .btn{padding:5px 9px;font-size:11px}
+.schedule-day{background:var(--white);border:1px solid var(--line);border-radius:7px;margin-bottom:10px;overflow:hidden}.day-head{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#faf5e9;border-bottom:1px solid var(--line)}.day-head strong{font-size:13px}.day-head small{color:var(--muted)}.day-body{padding:12px}.day-body select,.day-body input,.day-body textarea,select,input,textarea{font:inherit}.day-body select{width:100%;padding:9px;border:1px solid var(--line);border-radius:5px;background:var(--stone);font-size:12px}.day-row{display:flex;gap:7px;margin-top:8px}.day-row input{flex:1;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--stone);font-size:12px}.day-row button{padding:8px 10px}.day-course{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:12px}.day-course button{border:0;background:transparent;color:var(--red);font-weight:700}
+.week-head{display:flex;align-items:center;justify-content:space-between;background:var(--white);border:1px solid var(--line);border-radius:7px;padding:13px 15px;margin-bottom:8px;cursor:pointer}
+.week-head b{font:700 15px Georgia,serif}
+.week-head .wrange{font-size:11px;color:var(--muted);margin-left:8px}
+.week-head .wcount{font-size:11px;color:var(--sea);font-weight:700}
+.week-head .chev{font-size:11px;color:var(--muted);margin-left:8px}
+.week-head.open{border-color:var(--orange)}
+.week-days{margin:0 0 14px 4px;padding-left:10px;border-left:2px solid var(--line)}
+#mapWrap{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:7px}.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#555}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}.selected{margin-top:9px;background:var(--white);border:1px solid var(--line);padding:10px;border-radius:5px;font-size:12px}
+.region{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:14px;margin-bottom:10px}.region h3{font:600 16px Georgia;margin:0 0 5px}.region p{font-size:12px;color:#4b473b;margin:4px 0}.region button{margin-top:7px}
+.food h3{font:600 16px Georgia;color:var(--orange);margin:0 0 7px}.food .item{padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}.food .item:last-child{border:0}
+textarea{width:100%;min-height:180px;padding:11px;border:1px solid var(--line);border-radius:6px;background:var(--white);font-size:13px}
+label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px 0 4px}input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:5px;background:var(--stone);font-size:12px}
+.small{font-size:10px;color:var(--muted)}.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:white;padding:10px 16px;border-radius:14px;font-size:12px;z-index:100;opacity:0;pointer-events:none;transition:.2s;max-width:88vw;text-align:center;line-height:1.5}.toast.show{opacity:1}
+.wizard-steps{display:flex;gap:6px;margin:10px 0 14px}
+.wstep{flex:1;text-align:center;font-size:11px;font-weight:700;color:#B8AF97;padding:7px 4px;border-radius:20px;background:var(--stone2);border:1px solid var(--line)}
+.wstep.active{color:var(--white);background:var(--orange);border-color:var(--orange)}
+.wstep.done{color:var(--sea);background:#E4EEEE;border-color:var(--sea)}
+.wpanel{display:none}
+.wpanel.active{display:block}
+.hidden{display:none!important}
+#authOverlay{position:fixed;inset:0;background:var(--stone);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+#authOverlay .box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px 20px;max-width:340px;width:100%}
+#authOverlay h1{font:600 22px Georgia,serif;margin:0 0 4px}
+#authOverlay p.small{margin:0 0 16px}
+#authMsg{font-size:12px;color:var(--red);min-height:16px;margin:6px 0 0}
+#authOverlay .actions{margin-top:12px}
+#authOverlay .btn{flex:1}
+#userBar{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="authOverlay">
+  <div class="box">
+    <h1>제주살이 플래너</h1>
+    <p class="small">로그인하면 폰·노트북 등 여러 기기에서 같은 일정과 체크 내용을 볼 수 있어요.</p>
+    <label>이메일</label>
+    <input id="authEmail" type="email" placeholder="example@email.com" autocomplete="username">
+    <label>비밀번호 (6자 이상)</label>
+    <input id="authPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+    <p id="authMsg"></p>
+    <p class="small" style="margin-top:-6px"><a href="#" id="forgotPwLink" style="color:var(--muted);text-decoration:underline">비밀번호를 잊으셨나요?</a></p>
+    <div class="actions">
+      <button class="btn primary" id="loginBtn" type="button">로그인</button>
+      <button class="btn" id="signupBtn" type="button">처음이에요 (회원가입)</button>
+    </div>
+  </div>
+</div>
+<div class="app hidden" id="appRoot">
+<div id="userBar"><span id="userEmailLabel"></span><button class="btn" id="logoutBtn" type="button" style="padding:4px 9px;font-size:11px">로그아웃</button></div>
+<header>
+  <p class="eyebrow">JEJU · STAY PLANNER</p>
+  <div class="hero">
+    <div><h1>제주살이 플래너</h1><p id="ddayText">시작일을 설정해보세요</p></div>
+    <div class="stamp"><b id="ddayNum">D-?</b><span id="monthLabel">2027.05</span></div>
+  </div>
+</header>
+<nav id="tabs">
+  <button class="active" data-tab="home">홈</button>
+  <button data-tab="schedule" id="scheduleTabBtn">일정</button>
+  <button data-tab="courses">올레길</button>
+  <button data-tab="map">지도</button>
+  <button data-tab="food">맛집</button>
+  <button data-tab="stay">숙소</button>
+  <button data-tab="notes">메모</button>
+</nav>
+
+<main>
+<section id="home" class="section active">
+  <h2 class="title">이번 제주, 이렇게 시작해요</h2><p class="sub">로그인한 계정에 저장되어 다른 기기에서도 이어서 볼 수 있어요. 백업 파일로도 내보낼 수 있어요.</p>
+  <div class="banner" id="prefBanner"></div>
+  <div class="card">
+    <b>여행 스타일</b>
+    <p class="small" style="margin:4px 0 8px">홈 배너와 추천 문구에 반영돼요</p>
+    <div class="actions">
+      <button class="btn pref-btn" data-pref="olle">🥾 올레길 위주</button>
+      <button class="btn pref-btn" data-pref="food">🍽 맛집 위주</button>
+      <button class="btn pref-btn" data-pref="relax">☕ 여유롭게</button>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="stat"><span>완주 코스</span><b id="statDone">0</b><span>총 26개</span></div>
+    <div class="stat"><span>이번 여행 계획</span><b id="statPlan">0</b><span>내 일정에 배정</span></div>
+  </div>
+  <div class="card"><b>올레길 진행률</b><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
+  <div class="card" id="periodCard">
+    <b>제주살이 기간</b>
+    <label for="departureDate">시작일</label><input type="date" id="departureDate">
+    <label>기간 선택</label>
+    <div class="actions" id="durationPresets">
+      <button class="btn dur-btn" type="button" data-days="7">1주살기</button>
+      <button class="btn dur-btn" type="button" data-days="14">2주살기</button>
+      <button class="btn dur-btn" type="button" data-days="21">3주살기</button>
+      <button class="btn dur-btn" type="button" data-days="30">한달살기</button>
+    </div>
+    <label for="customDays">직접 입력 (일수)</label>
+    <input type="number" id="customDays" min="1" max="90" placeholder="예: 10">
+    <p class="small" id="periodSummary" style="margin:8px 0 0"></p>
+    <div class="actions" style="margin-top:10px"><button class="btn primary" id="todayBtn">오늘을 시작일로</button><button class="btn" id="sampleBtn">샘플 일정 만들기</button></div>
+  </div>
+  <div class="card"><b>빠른 안내</b><p class="small">① 위에서 제주살이 기간을 정해요 → ② 올레길에서 '이번 여행 계획'을 선택 → ③ 일정 탭에서 주차를 눌러 펼치고 날짜별 코스를 배정 → ④ 지도에서 전체 흐름 확인 → ⑤ 숙소와 메모 저장</p></div>
+  <div class="actions"><button class="btn" id="exportBtn">백업 내보내기</button><button class="btn" id="importBtn">백업 불러오기</button><button class="btn danger" id="resetBtn">전체 초기화</button><input id="importFile" type="file" accept=".json" class="hidden"></div>
+</section>
+
+<section id="schedule" class="section">
+  <h2 class="title" id="scheduleTitle">일정</h2><p class="sub">하루에 하나의 메인 올레 코스를 배정하고, 휴식일·자유일도 직접 넣을 수 있어요. 주차를 눌러 펼치고 접을 수 있어요.</p>
+  <div class="actions"><button class="btn primary" id="autoScheduleBtn">계획 코스 자동 배정</button><button class="btn" id="clearScheduleBtn">일정 비우기</button></div>
+  <div id="scheduleList" style="margin-top:12px"></div>
+</section>
+
+<section id="courses" class="section">
+  <h2 class="title">올레길 코스</h2><p class="sub">총 26개. 정규 21개 + 부속 5개 · 완주와 여행 계획을 각각 저장합니다.</p>
+  <div class="banner">💡 실제 주소·운영 정보는 추후 수정 전제입니다. '지도 링크'는 브라우저에서 바로 동작하도록 외부 지도 URL을 새 창으로 여는 방식입니다.</div>
+  <div id="courseList"></div>
+</section>
+
+<section id="map" class="section">
+  <h2 class="title">올레길 한눈에 보기</h2><p class="sub">실제 지도 데이터가 아닌 개념도입니다. 점을 누르면 코스를 확인할 수 있어요.</p>
+  <div class="legend">
+    <span><i class="dot" style="background:#8A8272"></i>다녀옴</span><span><i class="dot" style="background:#3A6EA5"></i>이번 여행</span><span><i class="dot" style="background:#C0483A"></i>미계획</span><span><i class="dot" style="background:#E8952E"></i>장소</span><span><i class="dot" style="background:#8B5FA0"></i>숙소</span>
+  </div>
+  <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
+</section>
+
+<section id="food" class="section">
+  <h2 class="title">로컬 맛집</h2><p class="sub">현재는 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인하세요.</p>
+  <div class="food card"><h3>제주시 · 동문시장</h3><div class="item">동문시장 해산물 식당 · 갈치조림·구이, 고등어회</div><div class="item">동문시장 오란다·과즐 · 시장 간식</div><div class="item">노형동 코시롱 · 흑돼지 한정식</div></div>
+  <div class="food card"><h3>애월 · 서쪽</h3><div class="item">애월 해안도로 카페거리 · 오션뷰 카페</div><div class="item">애월 유니호텔 코시롱 · 한정식</div></div>
+  <div class="food card"><h3>서귀포</h3><div class="item">서귀포매일올레시장 · 시장 먹거리</div><div class="item">이중섭거리 주변 · 몸국·고기국수</div></div>
+  <div class="food card"><h3>성산 · 동쪽</h3><div class="item">성산일출봉 인근 해녀의 집 · 성게비빔밥</div><div class="item">종달리 카페거리 · 카페</div></div>
+  <div class="card" id="addPlaceWizard">
+    <b>내 장소 추가</b>
+    <div class="wizard-steps" id="wizardSteps">
+      <span class="wstep active" data-step="1">① 이름</span>
+      <span class="wstep" data-step="2">② 검색</span>
+      <span class="wstep" data-step="3">③ 위치 붙여넣기</span>
+    </div>
+
+    <div class="wpanel active" id="wpanel1">
+      <label>장소 이름</label>
+      <input id="placeName" placeholder="예: 협재해수욕장">
+      <label>카테고리</label>
+      <select id="placeCategory"><option value="food">🍽 맛집</option><option value="sight">📷 관광지</option><option value="etc">📌 기타</option></select>
+      <button class="btn primary" id="toStep2" type="button" style="width:100%;margin-top:10px">다음 →</button>
+    </div>
+
+    <div class="wpanel" id="wpanel2">
+      <p class="small">아래 버튼을 누르면 방금 입력한 이름으로 구글맵 검색이 새 탭에서 열려요. 원하는 장소를 찾으면 <b>공유 → 링크 복사</b>를 눌러주세요.</p>
+      <button class="btn green" id="mapSearchBtn" type="button" style="width:100%;margin:9px 0">🔍 "<span id="searchNamePreview"></span>" 구글맵에서 검색</button>
+      <div class="actions">
+        <button class="btn" id="toStep1" type="button">← 이전</button>
+        <button class="btn primary" id="toStep3" type="button">링크 복사했어요 →</button>
+      </div>
+    </div>
+
+    <div class="wpanel" id="wpanel3">
+      <label>주소, 장소 이름, 또는 구글맵 링크</label>
+      <input id="placeCoord" placeholder="예: 제주시 구좌읍 하도리 2969">
+      <p class="small">"제주시 구좌읍 하도리 2969"처럼 <b>주소나 장소 이름을 그냥 적어도</b> 자동으로 위치를 찾아요. 구글맵 전체 링크(.../@위도,경도/...)도 인식해요. (단, 축약 링크는 안 돼요) 정확한 위치를 몰라도 <b>비워두고 추가</b>하면 이름만 먼저 저장되고, 나중에 목록에서 채울 수 있어요.</p>
+      <div class="actions">
+        <button class="btn" id="toStep2b" type="button">← 이전</button>
+        <button class="btn primary" id="addPlaceBtn" type="button">✓ 추가 완료</button>
+      </div>
+    </div>
+
+    <div id="customPlaceList" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<section id="stay" class="section">
+  <h2 class="title">숙소 지역</h2><p class="sub">한 곳을 선택하면 지도에 보라색 마커로 표시됩니다.</p>
+  <div class="region"><h3>제주시 · 신제주·연동</h3><p>생활 인프라와 공항 접근성이 좋고 대중교통 선택지가 많은 편.</p><button class="btn" data-stay="jeju" data-lat="33.4869" data-lng="126.4783" data-label="제주시(신제주·연동)">이 지역을 숙소 후보로</button></div>
+  <div class="region"><h3>서귀포 · 중앙동</h3><p>시내 도보 이동이 편하고 남쪽 올레길과 연결하기 좋음.</p><button class="btn" data-stay="seogwipo" data-lat="33.2536" data-lng="126.5605" data-label="서귀포 중앙동">이 지역을 숙소 후보로</button></div>
+  <div class="region"><h3>애월 · 서쪽 해안</h3><p>카페와 해안 풍경을 즐기기 좋고 서쪽 코스 접근성이 좋음.</p><button class="btn" data-stay="aewol" data-lat="33.4626" data-lng="126.3220" data-label="애월">이 지역을 숙소 후보로</button></div>
+  <div class="region"><h3>성산 · 종달리</h3><p>동쪽 코스와 성산일출봉 접근이 좋고 조용한 마을 생활에 적합.</p><button class="btn" data-stay="seongsan" data-lat="33.5178" data-lng="126.9130" data-label="성산·종달리">이 지역을 숙소 후보로</button></div>
+  <div class="card" id="staySummary">현재 숙소 후보: 없음</div>
+</section>
+
+<section id="notes" class="section">
+  <h2 class="title">나의 메모</h2><p class="sub">입력 후 잠시 기다리면 자동 저장됩니다.</p>
+  <textarea id="notesArea" placeholder="예: 5/3 애월 도착, 15시 체크인&#10;5/4 올레 16코스, 점심 예약 확인"></textarea>
+  <p class="small" id="saveStatus">이 브라우저에 자동 저장됩니다.</p>
+</section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ▼▼▼ 여기 Firebase 설정을 붙여넣으세요 (안내 문서 참고) ▼▼▼ -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD883ICuL7jN6gkdHR-y5FACXVbAaO2kNc",
+  authDomain: "jeju-planner-c36ce.firebaseapp.com",
+  projectId: "jeju-planner-c36ce",
+  storageBucket: "jeju-planner-c36ce.firebasestorage.app",
+  messagingSenderId: "1009495851120",
+  appId: "1:1009495851120:web:e7ec610ede2cc275bf34b5"
+};
+let auth, db;
+try{
+  if(typeof firebase==='undefined') throw new Error('firebase-sdk-not-loaded');
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  db = firebase.firestore();
+}catch(e){
+  console.error('Firebase init failed', e);
+}
+</script>
+<!-- ▲▲▲ 여기까지 ▲▲▲ -->
+
+<script>
+(function(){
+'use strict';
+const KEY='jeju3weeks.v3';
+const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,customPlaces:[],schedule:{}};
+let profile=Object.assign({},DEFAULT);
+let currentUser=null;
+
+function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
+function withTimeout(promise,ms){
+  return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]);
+}
+function loadLocal(){try{const x=JSON.parse(localStorage.getItem(KEY)||'{}');return Object.keys(x).length?normalize(x):null}catch(e){return null}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(profile))}catch(e){}}
+function save(){
+  saveLocal();
+  if(currentUser){
+    db.collection('users').doc(currentUser.uid).set(profile).catch(()=>{toast('동기화 실패: 인터넷 연결을 확인해주세요 (이 기기에는 저장됐어요)')});
+  }
+  return true;
+}
+async function loadProfileForUser(uid){
+  try{
+    const doc=await withTimeout(db.collection('users').doc(uid).get(),12000);
+    if(doc.exists){
+      profile=normalize(doc.data());
+    }else{
+      profile=loadLocal()||Object.assign({},DEFAULT);
+      await db.collection('users').doc(uid).set(profile);
+    }
+    saveLocal();
+  }catch(e){
+    profile=loadLocal()||Object.assign({},DEFAULT);
+    toast('오프라인 상태예요. 이 기기에 저장된 데이터로 시작합니다.');
+  }
+}
+function authMsg(s,ok){const el=document.getElementById('authMsg');el.textContent=s||'';el.style.color=ok?'var(--sea)':'var(--red)'}
+function authErrorText(e){
+  const map={'auth/invalid-email':'이메일 형식이 올바르지 않아요.','auth/email-already-in-use':'이미 가입된 이메일이에요. 로그인을 눌러주세요.','auth/weak-password':'비밀번호는 6자 이상이어야 해요.','auth/user-not-found':'가입되지 않은 이메일이에요. 회원가입을 눌러주세요.','auth/wrong-password':'비밀번호가 틀렸어요.','auth/invalid-credential':'이메일 또는 비밀번호가 틀렸어요.','auth/network-request-failed':'인터넷 연결을 확인해주세요.','auth/api-key-not-valid':'Firebase 설정이 아직 안 되어 있어요. 안내 문서를 확인해주세요.','timeout':'연결이 안 돼요. 인터넷 연결을 확인하거나, 이 파일을 실제 웹 주소(https://)로 열어서 다시 시도해주세요.'};
+  return map[e.code]||('오류가 발생했어요: '+e.message)
+}
+function networkBlocked(){
+  if(auth) return false;
+  authMsg('이 네트워크에서 로그인 서버에 연결하지 못했어요. 와이파이를 끄고 데이터(LTE)로 다시 열어보시거나, 다른 와이파이로 시도해주세요.');
+  return true;
+}
+document.getElementById('loginBtn').onclick=()=>{
+  if(networkBlocked())return;
+  const email=document.getElementById('authEmail').value.trim();
+  const pw=document.getElementById('authPw').value;
+  if(!email||!pw){authMsg('이메일과 비밀번호를 입력해주세요.');return}
+  authMsg('로그인 중…');
+  withTimeout(auth.signInWithEmailAndPassword(email,pw),12000).catch(e=>authMsg(authErrorText(e)));
+};
+document.getElementById('signupBtn').onclick=()=>{
+  if(networkBlocked())return;
+  const email=document.getElementById('authEmail').value.trim();
+  const pw=document.getElementById('authPw').value;
+  if(!email||!pw){authMsg('이메일과 비밀번호를 입력해주세요.');return}
+  if(pw.length<6){authMsg('비밀번호는 6자 이상이어야 해요.');return}
+  authMsg('가입 중…');
+  withTimeout(auth.createUserWithEmailAndPassword(email,pw),12000).catch(e=>authMsg(authErrorText(e)));
+};
+document.getElementById('logoutBtn').onclick=()=>{if(auth)auth.signOut()};
+document.getElementById('forgotPwLink').onclick=(ev)=>{
+  ev.preventDefault();
+  if(networkBlocked())return;
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email){authMsg('재설정 메일을 받을 이메일을 먼저 입력해주세요.');return}
+  authMsg('메일 보내는 중…');
+  auth.sendPasswordResetEmail(email).then(()=>{
+    authMsg('비밀번호 재설정 이메일을 보냈어요. 메일함(스팸함도)을 확인해주세요.',true);
+  }).catch(e=>authMsg(authErrorText(e)));
+};
+if(auth){
+auth.onAuthStateChanged(async(user)=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('appRoot').classList.remove('hidden');
+    document.getElementById('userEmailLabel').textContent=user.email||'';
+    authMsg('');
+    await loadProfileForUser(user.uid);
+    renderAll();
+  }else{
+    currentUser=null;
+    document.getElementById('authOverlay').classList.remove('hidden');
+    document.getElementById('appRoot').classList.add('hidden');
+  }
+});
+}else{
+  networkBlocked();
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),Math.min(5000,1800+s.length*40))}
+
+const raw=[
+['1','시흥초등학교 → 광치기해변','14.9km','4~5시간','mid','말미오름·알오름을 넘고 성산일출봉을 바라보는 동쪽 코스.','33.4636,126.9151','33.4407,126.9270'],
+['1-1','우도 올레','11.3km','3~4시간','lo','성산항에서 배로 들어가 우도봉과 검멀레해변을 지나는 섬 코스.','33.5056,126.9508','33.5056,126.9508'],
+['2','광치기해변 → 온평포구','15.6km','5~6시간','mid','식산봉과 혼인지를 지나는 해안·마을길.','33.4407,126.9270','33.4331,126.8477'],
+['3','온평포구 → 표선해수욕장','20.6km','6~7시간','hi','A/B 코스로 나뉘는 긴 코스. 체력 배분이 중요합니다.','33.4331,126.8477','33.3255,126.8367'],
+['4','표선해수욕장 → 남원포구','19km','6~7시간','hi','해안 마을을 잇는 비교적 평탄한 코스.','33.3255,126.8367','33.2794,126.7154'],
+['5','남원포구 → 쇠소깍','13.4km','4~5시간','mid','해안과 마을길을 걷는 코스.','33.2794,126.7154','33.2481,126.6135'],
+['6','쇠소깍 → 서귀포 올레여행자센터','11km','3~4시간','lo','소천지·소정방폭포·이중섭거리를 지나는 짧은 코스.','33.2481,126.6135','33.2456,126.5605'],
+['7','서귀포 올레여행자센터 → 월평아왜낭목쉼터','17.6km','6시간','hi','외돌개·황우지해안 등 서귀포 해안절경을 잇는 인기 코스.','33.2456,126.5605','33.2404,126.4956'],
+['7-1','서귀포시청 → 서귀포자연휴양림','15.6km','5시간','mid','숲길 위주의 내륙 코스.','33.2536,126.5133','33.3122,126.5344'],
+['8','월평아왜낭목쉼터 → 대평포구','19.6km','6~7시간','hi','중문·대평 해안절벽길을 따라 걷는 코스.','33.2404,126.4956','33.2308,126.4267'],
+['9','대평포구 → 화순금모래해수욕장','10km','3~4시간','lo','박수기정 절벽을 조망하는 짧고 인상적인 코스.','33.2308,126.4267','33.2372,126.3625'],
+['10','화순금모래해수욕장 → 하모체육공원','15.6km','5~6시간','mid','산방산과 송악산을 지나는 서남부 코스.','33.2372,126.3625','33.2133,126.2514'],
+['10-1','가파도 올레','4.2km','1~2시간','lo','청보리밭으로 유명한 짧은 섬 코스.','33.1728,126.2687','33.1728,126.2687'],
+['11','하모체육공원 → 무릉외갓집','17.5km','5~6시간','mid','모슬포에서 내륙 마을을 지나는 코스.','33.2133,126.2514','33.2789,126.2954'],
+['12','무릉외갓집 → 용수포구','17.5km','5~6시간','hi','오르막이 있는 서남부 코스.','33.2789,126.2954','33.3011,126.1934'],
+['13','용수포구 → 저지예술정보화마을','14.7km','4~5시간','mid','숲길 구간이 포함된 코스.','33.3011,126.1934','33.3210,126.2611'],
+['14','저지예술정보화마을 → 한림항','19.1km','6시간','hi','마을과 밭길을 지나 한림항으로.','33.3210,126.2611','33.4114,126.2657'],
+['14-1','저지 → 서광리 다원','19km','6시간','lo','곶자왈 숲길이 많은 코스.','33.3210,126.2611','33.3011,126.3315'],
+['15','한림항 → 고내포구','17.3km','6시간','mid','해안과 마을길을 잇는 서쪽 코스.','33.4114,126.2657','33.4633,126.3097'],
+['16','고내포구 → 광령1리사무소','15.8km','5~6시간','mid','애월 해안을 지나는 서쪽 코스.','33.4633,126.3097','33.4653,126.4596'],
+['17','광령1리사무소 → 제주원도심','18.2km','6시간','mid','공항 인근을 지나 원도심으로.','33.4653,126.4596','33.5135,126.5257'],
+['18','제주원도심 → 조천만세동산','19.1km','6시간','mid','원도심에서 동쪽 조천읍으로.','33.5135,126.5257','33.5401,126.6398'],
+['18-1','추자도 올레','18.2km','6~7시간','hi','배로 이동하는 섬 코스. 오르내림이 많습니다.','33.9636,126.3011','33.9636,126.3011'],
+['19','조천만세동산 → 김녕서포구','19.4km','6시간','mid','동북부 해안을 따라 걷는 코스.','33.5401,126.6398','33.5561,126.7529'],
+['20','김녕서포구 → 하도해녀박물관','17.3km','5~6시간','mid','해안 마을과 밭길을 지나는 코스.','33.5561,126.7529','33.5279,126.8579'],
+['21','하도해녀박물관 → 종달바당','11.3km','3~4시간','lo','지미봉과 토끼섬을 지나는 마지막 코스.','33.5279,126.8579','33.5178,126.9130']
+];
+const courses=raw.map(x=>({n:x[0],name:x[1],dist:x[2],time:x[3],level:x[4],desc:x[5],start:x[6].split(',').map(Number),end:x[7].split(',').map(Number)}));
+const level={lo:'하',mid:'중',hi:'상'};
+const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21'];
+const BRANCH=['1-1','7-1','10-1','14-1','18-1'];
+const foodSpots=[['동문시장 해산물',33.5138,126.5292],['동문시장 간식',33.5140,126.5296],['노형동 코시롱',33.4869,126.4783],['애월 카페거리',33.4633,126.3097],['서귀포매일올레시장',33.2537,126.5619],['이중섭거리',33.2489,126.5628],['성산 해녀의 집',33.4589,126.9425],['종달리 카페거리',33.5178,126.9130]];
+const W=640,H=400,latMin=33.10,latMax=33.60,lngMin=126.14,lngMax=126.98;
+function project(lat,lng){let x=(lng-lngMin)/(lngMax-lngMin)*W,y=H-(Math.min(Math.max(lat,latMin),latMax+.12)-latMin)/(latMax-latMin)*H;return [Math.max(10,Math.min(W-10,x)),Math.max(10,Math.min(H-10,y))]}
+function smooth(pts){let d=`M${pts[0][0]},${pts[0][1]} `;for(let i=0;i<pts.length;i++){let p0=pts[(i-1+pts.length)%pts.length],p1=pts[i],p2=pts[(i+1)%pts.length],p3=pts[(i+2)%pts.length];d+=`C${p1[0]+(p2[0]-p0[0])/6},${p1[1]+(p2[1]-p0[1])/6} ${p2[0]-(p3[0]-p1[0])/6},${p2[1]-(p3[1]-p1[1])/6} ${p2[0]},${p2[1]} `}return d+'Z'}
+
+function renderCourses(){
+ const list=document.getElementById('courseList');list.innerHTML='';
+ courses.forEach(c=>{
+  const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+  const el=document.createElement('div');el.className='course'+(done?' done':'')+(planned?' planned':'');el.id=id;
+  const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
+  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button><button class="btn link">지도 열기</button></div></div>`;
+  el.querySelector('.plan').onclick=()=>{toggle(profile.plan,id);save();renderAll()};
+  el.querySelector('.check').onclick=()=>{toggle(profile.done,id);save();renderAll()};
+  el.querySelector('.link').onclick=()=>window.open(mapUrl,'_blank','noopener');
+  list.appendChild(el);
+ });
+}
+function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
+function renderHome(){
+ const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
+ document.getElementById('statDone').textContent=done;document.getElementById('statPlan').textContent=plan;
+ document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressText').textContent=p+'% 완주 · '+done+'/'+courses.length;
+ document.getElementById('departureDate').value=profile.departure;
+ const pref={olle:'🥾 올레길 위주 스타일 — 걷는 날을 중심으로 코스를 골라보세요.',food:'🍽 맛집 위주 스타일 — 맛집과 코스를 함께 묶어보세요.',relax:'☕ 여유롭게 스타일 — 난이도 하 코스와 휴식일을 섞어보세요.'};
+ document.getElementById('prefBanner').textContent=pref[profile.pref]||pref.olle;
+ document.querySelectorAll('.pref-btn').forEach(b=>b.classList.toggle('active',b.dataset.pref===profile.pref));
+}
+function renderDday(){
+ const t=new Date(profile.departure+'T00:00:00'),d=Math.ceil((t-new Date())/86400000);
+ document.getElementById('ddayNum').textContent=d>0?'D-'+d:d===0?'D-DAY':'D+'+Math.abs(d);
+ document.getElementById('ddayText').textContent=d>0?`제주살이까지 ${d}일 남았어요`:'즐거운 제주 생활 되세요!';
+ document.getElementById('monthLabel').textContent=profile.departure.slice(0,7).replace('-','.');
+}
+let openWeek = 1; // which week's 7 days are currently expanded (session-only UI state)
+
+function renderSchedule(){
+ const wrap=document.getElementById('scheduleList');wrap.innerHTML='';
+ const days=profile.days||21;
+ const totalWeeks=Math.ceil(days/7);
+ if(!openWeek||openWeek>totalWeeks) openWeek=1;
+ for(let w=1; w<=totalWeeks; w++){
+  const startDay=(w-1)*7+1, endDay=Math.min(w*7, days);
+  const sd=new Date(profile.departure+'T00:00:00'); sd.setDate(sd.getDate()+startDay-1);
+  const ed=new Date(profile.departure+'T00:00:00'); ed.setDate(ed.getDate()+endDay-1);
+  const rangeStr=`${sd.getMonth()+1}/${sd.getDate()} ~ ${ed.getMonth()+1}/${ed.getDate()}`;
+  let olleCount=0;
+  for(let i=startDay;i<=endDay;i++) if(profile.schedule[i] && profile.schedule[i].type==='olle' && profile.schedule[i].course) olleCount++;
+
+  const isOpen = openWeek===w;
+  const head=document.createElement('div');
+  head.className='week-head'+(isOpen?' open':'');
+  head.innerHTML=`<span><b>${w}주차</b><span class="wrange">${rangeStr}</span></span><span><span class="wcount">${olleCount}일 올레</span><span class="chev">${isOpen?'▲':'▼'}</span></span>`;
+  head.onclick=()=>{ openWeek = isOpen ? null : w; renderSchedule(); };
+  wrap.appendChild(head);
+
+  const daysWrap=document.createElement('div');
+  daysWrap.className='week-days';
+  daysWrap.style.display = isOpen ? 'block' : 'none';
+
+  for(let i=startDay;i<=endDay;i++){
+   const item=profile.schedule[i]||{type:'rest',course:'',note:''},date=new Date(profile.departure+'T00:00:00');date.setDate(date.getDate()+i-1);
+   const ds=`${date.getMonth()+1}/${date.getDate()}`;
+   const div=document.createElement('div');div.className='schedule-day';
+   const options=courses.filter(c=>profile.plan.includes('course-'+c.n)).map(c=>`<option value="${esc(c.n)}" ${item.course===c.n?'selected':''}>올레 ${esc(c.n)} · ${esc(c.name)}</option>`).join('');
+   div.innerHTML=`<div class="day-head"><strong>DAY ${i} · ${ds}</strong></div><div class="day-body"><select class="type"><option value="rest" ${item.type==='rest'?'selected':''}>☕ 휴식 / 자유일</option><option value="olle" ${item.type==='olle'?'selected':''}>🥾 올레길</option><option value="move" ${item.type==='move'?'selected':''}>🚍 이동 / 숙소 변경</option><option value="food" ${item.type==='food'?'selected':''}>🍽 맛집 / 관광</option></select><div class="day-row"><select class="courseSel" ${item.type!=='olle'?'disabled':''}><option value="">계획 코스 선택</option>${options}</select><button class="btn">저장</button></div><input class="note" placeholder="이 날의 메모" value="${esc(item.note||'')}"><div class="day-course">${item.course?`현재 배정: 올레 ${esc(item.course)} · ${esc((courses.find(c=>c.n===item.course)||{}).name||'')}`:'메인 코스 없음'}</div></div>`;
+   const type=div.querySelector('.type'),cs=div.querySelector('.courseSel'),saveBtn=div.querySelector('.day-row button');
+   type.onchange=()=>{cs.disabled=type.value!=='olle';};
+   saveBtn.onclick=()=>{profile.schedule[i]={type:type.value,course:type.value==='olle'?cs.value:'',note:div.querySelector('.note').value};if(profile.schedule[i].course&&!profile.plan.includes('course-'+profile.schedule[i].course))profile.plan.push('course-'+profile.schedule[i].course);save();renderAll();openWeek=w;showTab('schedule');toast('DAY '+i+' 저장됨')};
+   daysWrap.appendChild(div);
+  }
+  wrap.appendChild(daysWrap);
+ }
+}
+function autoSchedule(){
+ const days=profile.days||21;
+ const planned=courses.filter(c=>profile.plan.includes('course-'+c.n));
+ profile.schedule={};let d=1;
+ planned.slice(0,days).forEach(c=>{profile.schedule[d++]={type:'olle',course:c.n,note:''};if(d<=days&&planned.length>7&&d%4===0)d++});
+ for(let i=1;i<=days;i++)if(!profile.schedule[i])profile.schedule[i]={type:'rest',course:'',note:''};
+ save();renderAll();toast('계획 코스를 '+days+'일에 자동 배정했습니다');
+}
+function renderMap(){
+ const wrap=document.getElementById('mapWrap'),ring=RING.map(id=>courses.find(c=>c.n===id)),branch=BRANCH.map(id=>courses.find(c=>c.n===id));let seg='',dots='';
+ ring.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;seg+=`<line id="seg-${c.n}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#C0483A" stroke-width="7" stroke-linecap="round"/>`;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="#C0483A" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="7" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
+ branch.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="#C0483A" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
+ let extras='';foodSpots.forEach(f=>{const [x,y]=project(f[1],f[2]);extras+=`<circle class="food-node" data-name="${esc(f[0])}" cx="${x}" cy="${y}" r="5" fill="#E8952E" stroke="#fff"/>`});
+ (profile.customPlaces||[]).forEach(p=>{if(p.lat===null||p.lat===undefined)return;const [x,y]=project(p.lat,p.lng),col=p.category==='sight'?'#2FA88F':p.category==='etc'?'#6B6456':'#E8952E';extras+=`<circle class="food-node" data-name="${esc(p.name)}" cx="${x}" cy="${y}" r="5" fill="${col}" stroke="#fff"/>`});
+ let stay='';if(profile.stay){const [x,y]=project(profile.stay.lat,profile.stay.lng);stay=`<g class="stay-node" data-name="${esc(profile.stay.label)}"><path d="M${x},${y-14}l8,11h-16z" fill="#8B5FA0" stroke="#fff"/><rect x="${x-7}" y="${y-3}" width="14" height="10" fill="#8B5FA0" stroke="#fff"/></g>`}
+ const pts=ring.map(c=>project(...c.start));
+ wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#DCEAEF"/><path d="${smooth(pts)}" fill="#D7E4C4" stroke="#9CB584" stroke-width="2"/><circle cx="${W*.47}" cy="${H*.5}" r="5" fill="#6E8F58"/><text x="${W*.47}" y="${H*.5-10}" text-anchor="middle" font-size="9" fill="#5C7A4C">한라산</text>${extras}${seg}${dots}${stay}</svg>`;
+ wrap.querySelectorAll('.map-node').forEach(n=>n.onclick=()=>{const c=courses.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`});
+ wrap.querySelectorAll('.food-node').forEach(n=>n.onclick=()=>document.getElementById('mapSelected').textContent='📍 '+n.dataset.name);
+ const s=wrap.querySelector('.stay-node');if(s)s.onclick=()=>document.getElementById('mapSelected').textContent='🏠 숙소 후보 · '+s.dataset.name;
+ courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'#8A8272':plan?'#3A6EA5':'#C0483A';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
+}
+function renderStay(){document.querySelectorAll('[data-stay]').forEach(b=>{const on=profile.stay&&profile.stay.region===b.dataset.stay;b.textContent=on?'✓ 숙소 후보로 선택됨':'이 지역을 숙소 후보로';b.classList.toggle('green',on)});document.getElementById('staySummary').textContent=profile.stay?'현재 숙소 후보: '+profile.stay.label:'현재 숙소 후보: 없음'}
+function renderPlaces(){
+  const l=document.getElementById('customPlaceList');
+  l.innerHTML=(profile.customPlaces||[]).map((p,i)=>{
+    const icon=p.category==='food'?'🍽':p.category==='sight'?'📷':'📌';
+    const hasCoord = p.lat!==null && p.lat!==undefined;
+    if(hasCoord){
+      return `<div class="day-course"><span>${icon} ${esc(p.name)}</span><button class="btn danger" data-del="${i}">삭제</button></div>`;
+    }
+    return `<div class="day-course" style="flex-wrap:wrap;gap:6px">
+      <span style="flex:1 1 100%">${icon} ${esc(p.name)} <span class="small" style="color:#B0503C">· 좌표 없음</span></span>
+      <input type="text" data-coordfor="${i}" placeholder="좌표 또는 링크 추가" style="flex:1;min-width:140px">
+      <button class="btn blue" data-setcoord="${i}">저장</button>
+      <button class="btn danger" data-del="${i}">삭제</button>
+    </div>`;
+  }).join('');
+  l.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{profile.customPlaces.splice(+b.dataset.del,1);save();renderAll()});
+  l.querySelectorAll('[data-setcoord]').forEach(b=>b.onclick=async ()=>{
+    const idx=+b.dataset.setcoord;
+    const input=l.querySelector(`[data-coordfor="${idx}"]`);
+    const raw=input.value.trim();
+    if(!raw){ toast('좌표, 주소, 또는 구글맵 링크를 입력해주세요.'); return; }
+
+    let coord=null, networkFailed=false;
+    b.disabled=true; b.textContent='찾는 중…';
+    try{ coord=await resolveLocation(raw); }catch(e){ networkFailed=true; }
+    b.disabled=false; b.textContent='저장';
+
+    if(networkFailed){ toast('위치 검색 서버에 연결하지 못했어요. 잠시 후 다시 시도해주세요.'); return; }
+    if(!coord || coord[0]<33||coord[0]>34||coord[1]<125||coord[1]>128){
+      toast(/maps\.app\.goo\.gl|goo\.gl\/maps/.test(raw) ? '축약 링크는 안 돼요. 브라우저에서 열어 전체 주소를 복사해주세요.' : '위치를 찾지 못했어요. 형식을 확인해주세요.');
+      return;
+    }
+    profile.customPlaces[idx].lat=coord[0];
+    profile.customPlaces[idx].lng=coord[1];
+    save();renderAll();
+    toast('좌표를 추가했습니다');
+  });
+}
+function updateScheduleLabels(){
+ const label=(profile.days||21)+'일 일정';
+ const tabBtn=document.getElementById('scheduleTabBtn');if(tabBtn)tabBtn.textContent=label;
+ const title=document.getElementById('scheduleTitle');if(title)title.textContent=label;
+}
+function renderPeriod(){
+ document.getElementById('departureDate').value=profile.departure;
+ document.getElementById('customDays').value=profile.days;
+ document.querySelectorAll('.dur-btn').forEach(b=>b.classList.toggle('active',+b.dataset.days===profile.days));
+ const sd=new Date(profile.departure+'T00:00:00');
+ const ed=new Date(profile.departure+'T00:00:00');ed.setDate(ed.getDate()+profile.days-1);
+ const fmt=x=>`${x.getFullYear()}.${String(x.getMonth()+1).padStart(2,'0')}.${String(x.getDate()).padStart(2,'0')}`;
+ const weeks=Math.ceil(profile.days/7);
+ document.getElementById('periodSummary').textContent=`${fmt(sd)} ~ ${fmt(ed)} · 총 ${profile.days}일 (${weeks}주차까지)`;
+ updateScheduleLabels();
+}
+function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStay();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
+function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
+
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.querySelectorAll('.pref-btn').forEach(b=>b.onclick=()=>{profile.pref=b.dataset.pref;save();renderHome()});
+document.getElementById('departureDate').onchange=e=>{profile.departure=e.target.value||DEFAULT.departure;save();renderAll()};
+document.getElementById('todayBtn').onclick=()=>{profile.departure=new Date().toISOString().slice(0,10);save();renderAll()};
+document.getElementById('sampleBtn').onclick=()=>{profile.plan=['course-1','course-2','course-3','course-6','course-7','course-9','course-10','course-12','course-14','course-16','course-17','course-19','course-21'];autoSchedule()};
+document.querySelectorAll('.dur-btn').forEach(b=>b.onclick=()=>{profile.days=+b.dataset.days;save();renderAll();toast(b.textContent+'로 설정했습니다')});
+document.getElementById('customDays').onchange=e=>{
+ let v=parseInt(e.target.value,10);
+ if(!v||v<1)v=DEFAULT.days;
+ if(v>90)v=90;
+ profile.days=v;save();renderAll();
+};
+document.getElementById('autoScheduleBtn').onclick=autoSchedule;
+document.getElementById('clearScheduleBtn').onclick=()=>{profile.schedule={};save();renderSchedule();toast('일정을 비웠습니다')};
+document.getElementById('notesArea').oninput=e=>{document.getElementById('saveStatus').textContent='저장 중…';clearTimeout(window.__note);window.__note=setTimeout(()=>{profile.notes=e.target.value;save();document.getElementById('saveStatus').textContent='저장됨'},350)};
+document.querySelectorAll('[data-stay]').forEach(b=>b.onclick=()=>{profile.stay=profile.stay&&profile.stay.region===b.dataset.stay?null:{region:b.dataset.stay,lat:+b.dataset.lat,lng:+b.dataset.lng,label:b.dataset.label};save();renderAll();toast(profile.stay?'숙소 후보를 저장했습니다':'숙소 후보를 해제했습니다')});
+// ---- Add-place wizard ----
+function goToStep(step){
+  document.querySelectorAll('.wpanel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('wpanel'+step).classList.add('active');
+  document.querySelectorAll('.wstep').forEach(s=>{
+    const n=+s.dataset.step;
+    s.classList.toggle('active', n===step);
+    s.classList.toggle('done', n<step);
+  });
+}
+document.getElementById('toStep2').onclick=()=>{
+  const name=document.getElementById('placeName').value.trim();
+  if(!name){ toast('장소 이름을 먼저 입력해주세요'); return; }
+  document.getElementById('searchNamePreview').textContent=name;
+  goToStep(2);
+};
+document.getElementById('toStep1').onclick=()=>goToStep(1);
+document.getElementById('toStep3').onclick=()=>goToStep(3);
+document.getElementById('toStep2b').onclick=()=>goToStep(2);
+
+document.getElementById('mapSearchBtn').onclick=()=>{
+  const name=document.getElementById('placeName').value.trim();
+  const q=encodeURIComponent((name?name+' ':'')+'제주');
+  window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
+};
+function parseCoord(input){
+  if(!input) return null;
+  let s=String(input).trim();
+  try{ s=decodeURIComponent(s); }catch(e){}
+  let m=s.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(m) return [+m[1],+m[2]];
+  m=s.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)(?:,\s*\d+(?:\.\d+)?z)?/);
+  if(m) return [+m[1],+m[2]];
+  m=s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(m) return [+m[1],+m[2]];
+  m=s.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+  if(m) return [+m[1],+m[2]];
+  m=s.match(/[?&]center=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+  if(m) return [+m[1],+m[2]];
+  const matches=[...s.matchAll(/(-?\d{2}\.\d{4,}),\s*(-?\d{3}\.\d{4,})/g)];
+  if(matches.length) return [+matches[0][1],+matches[0][2]];
+  return null;
+}
+
+async function geocodeAddress(text){
+  const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&q='+encodeURIComponent(text.includes('제주')?text:text+' 제주');
+  let res;
+  try{
+    res=await fetch(url,{headers:{'Accept':'application/json'}});
+  }catch(e){
+    throw new Error('network');
+  }
+  if(!res.ok) throw new Error('network');
+  const data=await res.json();
+  if(!data || !data[0]) return null; // request worked, just no match
+  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+}
+
+// Try, in order: direct coordinate/URL pattern → coordinates embedded in a Maps URL →
+// a place name extracted from that URL → the raw text itself, geocoded as an address.
+// Returns null for genuinely unresolvable input (e.g. a bare shortened link with no name).
+// Throws only on network failure, so callers can tell "no match" apart from "request failed".
+async function resolveLocation(raw){
+  let coord = parseCoord(raw);
+  if(coord) return coord;
+
+  const isShortLink = /maps\.app\.goo\.gl|goo\.gl\/maps/.test(raw);
+  const isUrl = /^https?:\/\//i.test(raw);
+
+  let searchText = raw;
+  if(isUrl){
+    if(isShortLink) return null; // no coordinates and no readable name in a short link
+    try{
+      const u = new URL(raw);
+      const q = u.searchParams.get('query') || u.searchParams.get('q');
+      if(q){
+        searchText = q;
+      }else{
+        const m = u.pathname.match(/\/place\/([^/]+)/);
+        if(m) searchText = decodeURIComponent(m[1]).replace(/\+/g,' ');
+        else return null; // URL with no usable place name
+      }
+    }catch(e){ return null; }
+  }
+  return await geocodeAddress(searchText); // may throw on network failure
+}
+
+document.getElementById('addPlaceBtn').onclick=async ()=>{
+  const name=document.getElementById('placeName').value.trim();
+  const coordRaw=document.getElementById('placeCoord').value.trim();
+  const cat=document.getElementById('placeCategory').value;
+  const btn=document.getElementById('addPlaceBtn');
+
+  if(!name){ toast('장소 이름을 입력해주세요'); goToStep(1); return; }
+
+  let lat=null, lng=null;
+  if(coordRaw){
+    let coord=null, networkFailed=false;
+    btn.disabled=true; btn.textContent='위치 찾는 중…';
+    try{
+      coord=await resolveLocation(coordRaw);
+    }catch(e){
+      networkFailed=true;
+    }
+    btn.disabled=false; btn.textContent='✓ 추가 완료';
+
+    if(networkFailed){
+      toast('위치 검색 서버에 연결하지 못했어요. 잠시 후 다시 시도하거나, 이름만 먼저 저장해보세요.');
+      return;
+    }
+    if(!coord){
+      if(/maps\.app\.goo\.gl|goo\.gl\/maps/.test(coordRaw)){
+        toast('이 링크는 축약된 링크라 이름도 못 읽어요. 브라우저에서 한 번 열어 전체 주소를 복사해주세요.');
+      }else{
+        toast('위치를 찾지 못했어요. 주소를 더 정확히 적거나, 비워두면 이름만 먼저 저장돼요.');
+      }
+      return;
+    }
+    if(coord[0]<33||coord[0]>34||coord[1]<125||coord[1]>128){
+      toast('찾은 위치가 제주 지역 범위를 벗어난 것 같아요. 다시 확인해주세요.');
+      return;
+    }
+    lat=coord[0]; lng=coord[1];
+  }
+
+  profile.customPlaces.push({name,category:cat,lat,lng});
+  save();
+  document.getElementById('placeName').value='';
+  document.getElementById('placeCoord').value='';
+  renderAll();
+  goToStep(1);
+  toast(lat!==null ? '지도에 장소를 추가했습니다' : '이름만 저장했어요. 좌표는 나중에 추가할 수 있어요.');
+};
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jeju-3weeks-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일을 만들었습니다')};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에 저장된 제주 여행 데이터를 모두 초기화할까요?')){profile=Object.assign({},DEFAULT);save();renderAll();toast('초기화했습니다')}};
+
+})();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+</script>
+</body>
+</html>
