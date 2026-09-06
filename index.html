@@ -403,13 +403,12 @@ function renderDday(){
  document.getElementById('ddayText').textContent=d>0?`제주살이까지 ${d}일 남았어요`:'즐거운 제주 생활 되세요!';
  document.getElementById('monthLabel').textContent=profile.departure.slice(0,7).replace('-','.');
 }
-let openWeek = 1; // which week's 7 days are currently expanded (session-only UI state)
+let openWeeks = {1:true}; // each week's expand state is independent
 
 function renderSchedule(){
  const wrap=document.getElementById('scheduleList');wrap.innerHTML='';
  const days=profile.days||21;
  const totalWeeks=Math.ceil(days/7);
- if(!openWeek||openWeek>totalWeeks) openWeek=1;
  for(let w=1; w<=totalWeeks; w++){
   const startDay=(w-1)*7+1, endDay=Math.min(w*7, days);
   const sd=new Date(profile.departure+'T00:00:00'); sd.setDate(sd.getDate()+startDay-1);
@@ -418,11 +417,11 @@ function renderSchedule(){
   let olleCount=0;
   for(let i=startDay;i<=endDay;i++) if(profile.schedule[i] && profile.schedule[i].type==='olle' && profile.schedule[i].course) olleCount++;
 
-  const isOpen = openWeek===w;
+  const isOpen = !!openWeeks[w];
   const head=document.createElement('div');
   head.className='week-head'+(isOpen?' open':'');
   head.innerHTML=`<span><b>${w}주차</b><span class="wrange">${rangeStr}</span></span><span><span class="wcount">${olleCount}일 올레</span><span class="chev">${isOpen?'▲':'▼'}</span></span>`;
-  head.onclick=()=>{ openWeek = isOpen ? null : w; renderSchedule(); };
+  head.onclick=()=>{ openWeeks[w] = !openWeeks[w]; renderSchedule(); };
   wrap.appendChild(head);
 
   const daysWrap=document.createElement('div');
@@ -437,7 +436,7 @@ function renderSchedule(){
    div.innerHTML=`<div class="day-head"><strong>DAY ${i} · ${ds}</strong></div><div class="day-body"><select class="type"><option value="rest" ${item.type==='rest'?'selected':''}>☕ 휴식 / 자유일</option><option value="olle" ${item.type==='olle'?'selected':''}>🥾 올레길</option><option value="move" ${item.type==='move'?'selected':''}>🚍 이동 / 숙소 변경</option><option value="food" ${item.type==='food'?'selected':''}>🍽 맛집 / 관광</option></select><div class="day-row"><select class="courseSel" ${item.type!=='olle'?'disabled':''}><option value="">계획 코스 선택</option>${options}</select><button class="btn">저장</button></div><input class="note" placeholder="이 날의 메모" value="${esc(item.note||'')}"><div class="day-course">${item.course?`현재 배정: 올레 ${esc(item.course)} · ${esc((courses.find(c=>c.n===item.course)||{}).name||'')}`:'메인 코스 없음'}</div></div>`;
    const type=div.querySelector('.type'),cs=div.querySelector('.courseSel'),saveBtn=div.querySelector('.day-row button');
    type.onchange=()=>{cs.disabled=type.value!=='olle';};
-   saveBtn.onclick=()=>{profile.schedule[i]={type:type.value,course:type.value==='olle'?cs.value:'',note:div.querySelector('.note').value};if(profile.schedule[i].course&&!profile.plan.includes('course-'+profile.schedule[i].course))profile.plan.push('course-'+profile.schedule[i].course);save();renderAll();openWeek=w;showTab('schedule');toast('DAY '+i+' 저장됨')};
+   saveBtn.onclick=()=>{profile.schedule[i]={type:type.value,course:type.value==='olle'?cs.value:'',note:div.querySelector('.note').value};if(profile.schedule[i].course&&!profile.plan.includes('course-'+profile.schedule[i].course))profile.plan.push('course-'+profile.schedule[i].course);save();renderAll();openWeeks[w]=true;showTab('schedule');toast('DAY '+i+' 저장됨')};
    daysWrap.appendChild(div);
   }
   wrap.appendChild(daysWrap);
