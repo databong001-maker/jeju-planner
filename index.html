@@ -403,7 +403,7 @@ function renderDday(){
  document.getElementById('ddayText').textContent=d>0?`제주살이까지 ${d}일 남았어요`:'즐거운 제주 생활 되세요!';
  document.getElementById('monthLabel').textContent=profile.departure.slice(0,7).replace('-','.');
 }
-let openWeeks = {1:true}; // each week's expand state is independent
+let openWeeks = {}; // each week's expand state is independent; all weeks start collapsed
 
 function renderSchedule(){
  const wrap=document.getElementById('scheduleList');wrap.innerHTML='';
