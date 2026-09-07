@@ -180,10 +180,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 
 <section id="food" class="section">
   <h2 class="title">로컬 맛집</h2><p class="sub">현재는 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인하세요.</p>
-  <div class="food card"><h3>제주시 · 동문시장</h3><div class="item">동문시장 해산물 식당 · 갈치조림·구이, 고등어회</div><div class="item">동문시장 오란다·과즐 · 시장 간식</div><div class="item">노형동 코시롱 · 흑돼지 한정식</div></div>
-  <div class="food card"><h3>애월 · 서쪽</h3><div class="item">애월 해안도로 카페거리 · 오션뷰 카페</div><div class="item">애월 유니호텔 코시롱 · 한정식</div></div>
-  <div class="food card"><h3>서귀포</h3><div class="item">서귀포매일올레시장 · 시장 먹거리</div><div class="item">이중섭거리 주변 · 몸국·고기국수</div></div>
-  <div class="food card"><h3>성산 · 동쪽</h3><div class="item">성산일출봉 인근 해녀의 집 · 성게비빔밥</div><div class="item">종달리 카페거리 · 카페</div></div>
+  <div id="foodStaticList"></div>
   <div class="card" id="addPlaceWizard">
     <b>내 장소 추가</b>
     <div class="wizard-steps" id="wizardSteps">
@@ -408,6 +405,40 @@ const level={lo:'하',mid:'중',hi:'상'};
 const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21'];
 const BRANCH=['1-1','7-1','10-1','14-1','18-1'];
 const foodSpots=[['동문시장 해산물',33.5138,126.5292],['동문시장 간식',33.5140,126.5296],['노형동 코시롱',33.4869,126.4783],['애월 카페거리',33.4633,126.3097],['서귀포매일올레시장',33.2537,126.5619],['이중섭거리',33.2489,126.5628],['성산 해녀의 집',33.4589,126.9425],['종달리 카페거리',33.5178,126.9130]];
+const localFoodData=[
+ {region:'제주시 · 동문시장',items:[
+  {name:'동문시장 해산물 식당',desc:'갈치조림·구이, 고등어회',lat:33.5138,lng:126.5292},
+  {name:'동문시장 오란다·과즐',desc:'시장 간식',lat:33.5140,lng:126.5296},
+  {name:'노형동 코시롱',desc:'흑돼지 한정식',lat:33.4869,lng:126.4783}
+ ]},
+ {region:'애월 · 서쪽',items:[
+  {name:'애월 해안도로 카페거리',desc:'오션뷰 카페',lat:33.4633,lng:126.3097},
+  {name:'애월 유니호텔 코시롱',desc:'한정식',lat:33.4633,lng:126.3097}
+ ]},
+ {region:'서귀포',items:[
+  {name:'서귀포매일올레시장',desc:'시장 먹거리',lat:33.2537,lng:126.5619},
+  {name:'이중섭거리 주변',desc:'몸국·고기국수',lat:33.2489,lng:126.5628}
+ ]},
+ {region:'성산 · 동쪽',items:[
+  {name:'성산일출봉 인근 해녀의 집',desc:'성게비빔밥',lat:33.4589,lng:126.9425},
+  {name:'종달리 카페거리',desc:'카페',lat:33.5178,lng:126.9130}
+ ]}
+];
+function renderFoodStatic(){
+ const wrap=document.getElementById('foodStaticList');if(!wrap)return;
+ wrap.innerHTML=localFoodData.map(g=>{
+  const items=g.items.map(it=>{
+   const segId='food-'+it.name.replace(/\s+/g,'');
+   const tabsHtml=segTabsHtml(segId,[
+    {label:'🚗 길찾기',html:dirButtonsHtml(it.lat,it.lng,it.name)},
+    {label:'🚏 주변 정류장',html:nearbyStopsPanelHtml({lat:it.lat,lng:it.lng})}
+   ]);
+   return `<div style="margin-bottom:10px"><div class="item">${esc(it.name)} · ${esc(it.desc)}</div>${tabsHtml}</div>`;
+  }).join('');
+  return `<div class="food card"><h3>${esc(g.region)}</h3>${items}</div>`;
+ }).join('');
+ wireSegTabs(wrap);
+}
 const W=640,H=400,latMin=33.10,latMax=33.60,lngMin=126.14,lngMax=126.98;
 function project(lat,lng){let x=(lng-lngMin)/(lngMax-lngMin)*W,y=H-(Math.min(Math.max(lat,latMin),latMax+.12)-latMin)/(latMax-latMin)*H;return [Math.max(10,Math.min(W-10,x)),Math.max(10,Math.min(H-10,y))]}
 function smooth(pts){let d=`M${pts[0][0]},${pts[0][1]} `;for(let i=0;i<pts.length;i++){let p0=pts[(i-1+pts.length)%pts.length],p1=pts[i],p2=pts[(i+1)%pts.length],p3=pts[(i+2)%pts.length];d+=`C${p1[0]+(p2[0]-p0[0])/6},${p1[1]+(p2[1]-p0[1])/6} ${p2[0]-(p3[0]-p1[0])/6},${p2[1]-(p3[1]-p1[1])/6} ${p2[0]},${p2[1]} `}return d+'Z'}
@@ -418,20 +449,27 @@ function renderCourses(){
   const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
   const el=document.createElement('div');el.className='course'+(done?' done':'')+(planned?' planned':'');el.id=id;
   const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
-  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button><button class="btn link">지도 열기</button><button class="btn stops-toggle" type="button">🚏 주변 정류장</button></div><div class="stops-panel hidden" style="margin-top:8px"></div></div>`;
+  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button></div>
+   <div class="seg-tabs"><button type="button" class="seg-tab map-tab">🌏 지도</button><button type="button" class="seg-tab stops-tab">🚏 주변 정류장</button></div>
+   <div class="seg-panel hidden map-panel"><a class="btn" href="${mapUrl}" target="_blank" rel="noopener" style="padding:4px 8px;font-size:10px">시작점→종점 도보 경로 열기</a></div>
+   <div class="seg-panel hidden stops-panel"></div>
+  </div>`;
   el.querySelector('.plan').onclick=()=>{toggle(profile.plan,id);save();renderAll()};
   el.querySelector('.check').onclick=()=>{toggle(profile.done,id);save();renderAll()};
-  el.querySelector('.link').onclick=()=>window.open(mapUrl,'_blank','noopener');
-  el.querySelector('.stops-toggle').onclick=()=>{
-   const panel=el.querySelector('.stops-panel');
-   const opening=panel.classList.contains('hidden');
-   panel.classList.toggle('hidden');
-   if(opening&&!panel.dataset.loaded){
-    panel.dataset.loaded='1';
+  const mapTab=el.querySelector('.map-tab'),stopsTab=el.querySelector('.stops-tab');
+  const mapPanel=el.querySelector('.map-panel'),stopsPanel=el.querySelector('.stops-panel');
+  const closeAll=()=>{mapPanel.classList.add('hidden');stopsPanel.classList.add('hidden');mapTab.classList.remove('active-seg');stopsTab.classList.remove('active-seg')};
+  mapTab.onclick=()=>{const was=mapTab.classList.contains('active-seg');closeAll();if(!was){mapPanel.classList.remove('hidden');mapTab.classList.add('active-seg')}};
+  stopsTab.onclick=()=>{
+   const was=stopsTab.classList.contains('active-seg');closeAll();
+   if(was)return;
+   stopsPanel.classList.remove('hidden');stopsTab.classList.add('active-seg');
+   if(!stopsPanel.dataset.loaded){
+    stopsPanel.dataset.loaded='1';
     const startNear=findNearestBusStops(c.start[0],c.start[1],2);
     const endNear=findNearestBusStops(c.end[0],c.end[1],2);
-    panel.innerHTML=`<div class="small" style="margin-bottom:4px"><b>시작점 근처</b></div>${startNear.map(stopCardHtml).join('')}<div class="small" style="margin:8px 0 4px"><b>종점 근처</b></div>${endNear.map(stopCardHtml).join('')}`;
-    wireArrivalButtons(panel);
+    stopsPanel.innerHTML=`<div class="small" style="margin-bottom:4px"><b>시작점 근처</b></div>${startNear.map(stopCardHtml).join('')}<div class="small" style="margin:8px 0 4px"><b>종점 근처</b></div>${endNear.map(stopCardHtml).join('')}`;
+    wireArrivalButtons(stopsPanel);
    }
   };
   list.appendChild(el);
@@ -875,7 +913,7 @@ function renderPeriod(){
  document.getElementById('periodSummary').textContent=`${fmt(sd)} ~ ${fmt(ed)} · 총 ${profile.days}일 (${weeks}주차까지)`;
  updateScheduleLabels();
 }
-function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
+function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
