@@ -544,7 +544,7 @@ function fmtMD(s){if(!s)return '?';const d=new Date(s+'T00:00:00');return `${d.g
 // ===== 대중교통 연동 설정 =====
 // 국토교통부(TAGO) 버스 API 2종. data.go.kr에서 승인받은 인증키를 아래에 채워주세요.
 // 브라우저에서 직접 호출 시 CORS(교차출처 차단)로 막힐 수 있어, 안 되면 서버(Netlify Functions 등) 경유가 필요할 수 있어요.
-const BUS_API_SERVICE_KEY=''; // 마이페이지에서 복사한 인증키(Decoding 권장)를 여기에 입력하세요
+const BUS_API_SERVICE_KEY='d1bd261aa28015904b06b3b1ff9d3966f95991cc3f9c900203ed87cfb4047e54'; // 공공데이터포털 인증키
 const BUS_ARRIVAL_API_URL='https://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
 const BUS_STTN_API_URL='https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCrdntPrxmtSttnList'; // 좌표기준 근접 정류소 조회 (nodeId·citycode를 여기서 얻음)
 
