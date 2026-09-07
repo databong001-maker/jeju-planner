@@ -92,6 +92,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <button data-tab="map">지도</button>
   <button data-tab="food">맛집</button>
   <button data-tab="stay">숙소</button>
+  <button data-tab="transit">교통</button>
   <button data-tab="notes">메모</button>
 </nav>
 
@@ -225,6 +226,20 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div class="actions" style="margin-top:10px"><button class="btn primary" id="goHomeAddStay" type="button">홈에서 숙소 추가/수정</button></div>
 </section>
 
+<section id="transit" class="section">
+  <h2 class="title">교통</h2><p class="sub">내 위치에서 가까운 버스정류장을 찾고, 실시간 도착정보를 확인해보세요.</p>
+  <div class="card">
+    <b>내 주변 정류장</b>
+    <p class="small" style="margin:4px 0 10px">위치 권한을 허용하면 가까운 정류장 순으로 보여드려요.</p>
+    <button class="btn primary" id="findNearStopsBtn" type="button" style="width:100%">📍 내 위치에서 가까운 정류장 찾기</button>
+    <div id="nearStopsResult" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <b>실시간 도착정보 안내</b>
+    <p class="small">실시간 버스 도착정보는 공공데이터포털 인증키가 필요해요. 정류장 카드의 "실시간 도착정보" 버튼을 눌러 확인해보세요. 키가 설정되어 있지 않으면 카카오맵에서 대신 확인할 수 있는 버튼이 나와요.</p>
+  </div>
+</section>
+
 <section id="notes" class="section">
   <h2 class="title">나의 메모</h2><p class="sub">입력 후 잠시 기다리면 자동 저장됩니다.</p>
   <textarea id="notesArea" placeholder="예: 5/3 애월 도착, 15시 체크인&#10;5/4 올레 16코스, 점심 예약 확인"></textarea>
@@ -238,6 +253,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="stops.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyD883ICuL7jN6gkdHR-y5FACXVbAaO2kNc",
@@ -399,10 +415,22 @@ function renderCourses(){
   const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
   const el=document.createElement('div');el.className='course'+(done?' done':'')+(planned?' planned':'');el.id=id;
   const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
-  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button><button class="btn link">지도 열기</button></div></div>`;
+  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button><button class="btn link">지도 열기</button><button class="btn stops-toggle" type="button">🚏 주변 정류장</button></div><div class="stops-panel hidden" style="margin-top:8px"></div></div>`;
   el.querySelector('.plan').onclick=()=>{toggle(profile.plan,id);save();renderAll()};
   el.querySelector('.check').onclick=()=>{toggle(profile.done,id);save();renderAll()};
   el.querySelector('.link').onclick=()=>window.open(mapUrl,'_blank','noopener');
+  el.querySelector('.stops-toggle').onclick=()=>{
+   const panel=el.querySelector('.stops-panel');
+   const opening=panel.classList.contains('hidden');
+   panel.classList.toggle('hidden');
+   if(opening&&!panel.dataset.loaded){
+    panel.dataset.loaded='1';
+    const startNear=findNearestBusStops(c.start[0],c.start[1],2);
+    const endNear=findNearestBusStops(c.end[0],c.end[1],2);
+    panel.innerHTML=`<div class="small" style="margin-bottom:4px"><b>시작점 근처</b></div>${startNear.map(stopCardHtml).join('')}<div class="small" style="margin:8px 0 4px"><b>종점 근처</b></div>${endNear.map(stopCardHtml).join('')}`;
+    wireArrivalButtons(panel);
+   }
+  };
   list.appendChild(el);
  });
 }
@@ -508,12 +536,110 @@ function renderStayTab(){
   const n=nightsBetween(s.checkin,s.checkout);
   const range=`${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}${n!==null?` · ${n}박`:''}`;
   const locTxt=s.lat!=null?'📍 위치 확인됨':'📍 위치 미확인';
-  return `<div class="course" style="align-items:center"><div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div><div style="flex:1"><h3>${esc(s.name)}</h3><div class="meta">${range} · ${locTxt}</div></div></div>`;
+  return `<div class="course" style="align-items:center"><div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div><div style="flex:1"><h3>${esc(s.name)}</h3><div class="meta">${range} · ${locTxt}</div>${dirButtonsHtml(s.lat,s.lng,s.name)}${nearbyCoursesHtml(s)}</div></div>`;
  }).join('');
 }
 
 function fmtMD(s){if(!s)return '?';const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`}
+// ===== 대중교통 연동 설정 =====
+// 공공데이터포털에서 '제주특별자치도_버스도착정보' 등 실시간 버스 API를 발급받으면 아래 두 값을 채워주세요.
+// 브라우저에서 직접 호출 시 CORS(교차출처 차단)로 막힐 수 있어, 안 되면 서버(Netlify Functions 등) 경유가 필요할 수 있어요.
+const BUS_API_SERVICE_KEY=''; // 발급받은 인증키를 여기에 입력하세요
+const BUS_API_URL=''; // 예: 'https://api.example.go.kr/getBusArrival' 형태의 실제 엔드포인트를 여기에 입력하세요
+
+function dirLinks(lat,lng,name){
+ const n=encodeURIComponent(name||'목적지');
+ return {
+  kakao:`https://map.kakao.com/link/to/${n},${lat},${lng}`,
+  tmap:`tmap://route?goalname=${n}&goalx=${lng}&goaly=${lat}`,
+  gmap:`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=transit`
+ };
+}
+function dirButtonsHtml(lat,lng,name){
+ if(lat==null||lng==null)return'';
+ const L=dirLinks(lat,lng,name);
+ return `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.kakao}" target="_blank" rel="noopener">🚌 카카오맵 길찾기</a>
+  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.tmap}" rel="noopener">🚕 티맵 길찾기</a>
+  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.gmap}" target="_blank" rel="noopener">🌏 구글맵 길찾기</a>
+ </div>`;
+}
+function findNearestBusStops(lat,lng,limit){
+ const stops=window.JEJU_BUS_STOPS||[];
+ if(!stops.length||lat==null||lng==null)return[];
+ return stops.map(s=>({stop:s,dist:haversineKm(lat,lng,s.lat,s.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,limit||5);
+}
+async function fetchBusArrival(stop){
+ if(!BUS_API_SERVICE_KEY||!BUS_API_URL){
+  return {ok:false,reason:'notconfigured'};
+ }
+ try{
+  const url=`${BUS_API_URL}?serviceKey=${encodeURIComponent(BUS_API_SERVICE_KEY)}&stationId=${encodeURIComponent(stop.id)}&_type=json`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('http '+res.status);
+  const data=await res.json();
+  return {ok:true,data};
+ }catch(e){
+  return {ok:false,reason:'error',error:e};
+ }
+}
+function stopCardHtml(item){
+ const s=item.stop;
+ return `<div class="course" style="align-items:center" data-stop-card="${esc(s.id)}">
+  <div class="num" style="border-color:var(--blue);color:var(--blue)">🚏</div>
+  <div style="flex:1">
+   <h3>${esc(s.name)}</h3>
+   <div class="meta">${item.dist.toFixed(2)}km · ID ${esc(s.id)}</div>
+   <div class="arrival-slot"></div>
+   ${dirButtonsHtml(s.lat,s.lng,s.name+' 정류장')}
+   <button class="btn" type="button" data-arrival="${esc(s.id)}" style="margin-top:6px;padding:4px 8px;font-size:10px">🚌 실시간 도착정보</button>
+  </div>
+ </div>`;
+}
+function wireArrivalButtons(container){
+ container.querySelectorAll('[data-arrival]').forEach(btn=>{
+  btn.onclick=async()=>{
+   const card=btn.closest('[data-stop-card]');
+   const slot=card.querySelector('.arrival-slot');
+   const stopId=btn.dataset.arrival;
+   const stopName=card.querySelector('h3').textContent;
+   slot.innerHTML='<p class="small">조회 중…</p>';
+   const r=await fetchBusArrival({id:stopId,name:stopName});
+   if(!r.ok){
+    const kakaoSearch=`https://map.kakao.com/link/search/${encodeURIComponent(stopName+' 정류장')}`;
+    slot.innerHTML=`<p class="small">실시간 도착정보를 불러오지 못했어요 (API 키 미설정 또는 연결 실패). <a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵에서 정류장 검색 →</a></p>`;
+    return;
+   }
+   // TODO: 실제 API 응답 구조에 맞춰 아래 파싱 로직을 채워주세요.
+   slot.innerHTML='<p class="small">응답을 받았지만 표시 형식이 아직 연결되지 않았어요. 콘솔에서 응답을 확인해주세요.</p>';
+   console.log('bus arrival raw response',r.data);
+  };
+ });
+}
 function nightsBetween(a,b){if(!a||!b)return null;const d1=new Date(a+'T00:00:00'),d2=new Date(b+'T00:00:00');return Math.round((d2-d1)/86400000)}
+function haversineKm(lat1,lng1,lat2,lng2){
+ const R=6371,toRad=d=>d*Math.PI/180;
+ const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1);
+ const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+ return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function nearestCourses(stay,limit=3){
+ if(stay.lat==null||stay.lng==null)return[];
+ return courses.map(c=>{
+  const midLat=(c.start[0]+c.end[0])/2, midLng=(c.start[1]+c.end[1])/2;
+  return {course:c,dist:haversineKm(stay.lat,stay.lng,midLat,midLng)};
+ }).sort((a,b)=>a.dist-b.dist).slice(0,limit);
+}
+function nearbyCoursesHtml(stay){
+ if(stay.lat==null||stay.lng==null)return'';
+ const near=nearestCourses(stay,3);
+ if(!near.length)return'';
+ const chips=near.map(x=>{
+  const planned=profile.plan.includes('course-'+x.course.n);
+  return `<button class="btn nearby-course-chip" type="button" data-course="${esc(x.course.n)}" style="padding:4px 8px;font-size:10px;margin:2px 4px 0 0${planned?';background:var(--blue);border-color:var(--blue);color:#fff':''}">올레 ${esc(x.course.n)} · ${x.dist.toFixed(1)}km${planned?' ✓':''}</button>`;
+ }).join('');
+ return `<div class="small" style="margin-top:6px">🥾 가까운 코스 (탭하면 여행 계획에 추가/제거)</div><div style="margin-top:2px">${chips}</div>`;
+}
 function renderStays(){
  const list=document.getElementById('staysList');
  const stays=(profile.stays||[]).slice().sort((a,b)=>(a.checkin||'').localeCompare(b.checkin||''));
@@ -527,6 +653,8 @@ function renderStays(){
     <div style="flex:1">
       <h3>${esc(s.name)}</h3>
       <div class="meta">${range} · ${locTxt}</div>
+      ${dirButtonsHtml(s.lat,s.lng,s.name)}
+      ${nearbyCoursesHtml(s)}
     </div>
     <div class="actions" style="margin-top:0">
       <button class="btn" data-edit-stay="${s.id}" type="button">✎</button>
@@ -613,7 +741,7 @@ function renderPlaces(){
     const icon=p.category==='food'?'🍽':p.category==='sight'?'📷':'📌';
     const hasCoord = p.lat!==null && p.lat!==undefined;
     if(hasCoord){
-      return `<div class="day-course"><span>${icon} ${esc(p.name)}</span><button class="btn danger" data-del="${i}">삭제</button></div>`;
+      return `<div class="day-course" style="flex-wrap:wrap"><span style="flex:1 1 100%">${icon} ${esc(p.name)}</span>${dirButtonsHtml(p.lat,p.lng,p.name)}<button class="btn danger" data-del="${i}" style="margin-top:6px">삭제</button></div>`;
     }
     return `<div class="day-course" style="flex-wrap:wrap;gap:6px">
       <span style="flex:1 1 100%">${icon} ${esc(p.name)} <span class="small" style="color:#B0503C">· 좌표 없음</span></span>
@@ -680,6 +808,25 @@ document.getElementById('autoScheduleBtn').onclick=autoSchedule;
 document.getElementById('clearScheduleBtn').onclick=()=>{profile.schedule={};save();renderSchedule();toast('일정을 비웠습니다')};
 document.getElementById('notesArea').oninput=e=>{document.getElementById('saveStatus').textContent='저장 중…';clearTimeout(window.__note);window.__note=setTimeout(()=>{profile.notes=e.target.value;save();document.getElementById('saveStatus').textContent='저장됨'},350)};
 document.getElementById('goHomeAddStay').onclick=()=>{showTab('home');document.getElementById('staysCard').scrollIntoView({behavior:'smooth',block:'center'})};
+document.getElementById('findNearStopsBtn').onclick=()=>{
+ const btn=document.getElementById('findNearStopsBtn'),result=document.getElementById('nearStopsResult');
+ if(!('geolocation' in navigator)){
+  result.innerHTML=`<p class="small">이 브라우저는 위치 확인을 지원하지 않아요.</p><a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('버스정류장')}">구글맵에서 내 주변 정류장 보기</a>`;
+  return;
+ }
+ btn.disabled=true;btn.textContent='위치 확인 중…';
+ navigator.geolocation.getCurrentPosition(pos=>{
+  btn.disabled=false;btn.textContent='📍 내 위치에서 가까운 정류장 찾기';
+  const {latitude,longitude}=pos.coords;
+  const near=findNearestBusStops(latitude,longitude,5);
+  if(!near.length){result.innerHTML='<p class="small">주변 정류장 데이터를 찾지 못했어요.</p>';return}
+  result.innerHTML=near.map(stopCardHtml).join('');
+  wireArrivalButtons(result);
+ },err=>{
+  btn.disabled=false;btn.textContent='📍 내 위치에서 가까운 정류장 찾기';
+  result.innerHTML=`<p class="small">위치 권한이 허용되지 않았어요. 아래 버튼으로 대신 확인해보세요.</p><a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('버스정류장')}">구글맵에서 내 주변 정류장 보기</a>`;
+ },{enableHighAccuracy:true,timeout:8000});
+};
 // ---- Add-place wizard ----
 function goToStep(step){
   document.querySelectorAll('.wpanel').forEach(p=>p.classList.remove('active'));
