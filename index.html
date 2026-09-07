@@ -494,6 +494,10 @@ const attractionData=[
  ]}
 ];
 const allAttractionItems=attractionData.flatMap(g=>g.items);
+function getAllAttractionItems(){
+ const custom=(profile.customPlaces||[]).filter(p=>p.category==='sight'&&p.lat!=null&&p.lng!=null).map(p=>({name:p.name,desc:'내가 추가한 관광지',lat:p.lat,lng:p.lng}));
+ return allAttractionItems.concat(custom);
+}
 function renderAttractionsStatic(){
  const wrap=document.getElementById('attractionStaticList');if(!wrap)return;
  wrap.innerHTML=attractionData.map(g=>{
@@ -565,13 +569,17 @@ function renderCourses(){
  });
 }
 const allFoodItems=localFoodData.flatMap(g=>g.items);
+function getAllFoodItems(){
+ const custom=(profile.customPlaces||[]).filter(p=>p.category==='food'&&p.lat!=null&&p.lng!=null).map(p=>({name:p.name,desc:'내가 추가한 맛집',lat:p.lat,lng:p.lng}));
+ return allFoodItems.concat(custom);
+}
 function openCourseDetail(n){
  const c=courses.find(x=>x.n===n);if(!c)return;
  const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
  const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
- const nearFood=allFoodItems.map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const nearFood=getAllFoodItems().map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
  const foodHtml=nearFood.length?nearFood.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 맛집 정보가 아직 없어요.</p>';
- const nearAttr=allAttractionItems.map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const nearAttr=getAllAttractionItems().map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
  const attrHtml=nearAttr.length?nearAttr.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 관광지 정보가 아직 없어요.</p>';
  const stopsNear=findNearestBusStops(c.start[0],c.start[1],2);
  const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
