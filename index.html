@@ -53,6 +53,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 .wpanel.active{display:block}
 .hidden{display:none!important}
 #authOverlay{position:fixed;inset:0;background:var(--stone);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+#courseDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#courseDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#courseDetailOverlay h3{margin:18px 0 8px}
 #authOverlay .box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px 20px;max-width:340px;width:100%}
 #authOverlay h1{font:600 22px Georgia,serif;margin:0 0 4px}
 #authOverlay p.small{margin:0 0 16px}
@@ -63,6 +64,12 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 </style>
 </head>
 <body>
+<div id="courseDetailOverlay" class="hidden">
+  <div class="inner">
+    <button class="btn" id="courseDetailBack" type="button">← 뒤로</button>
+    <div id="courseDetailContent" style="margin-top:12px"></div>
+  </div>
+</div>
 <div id="authOverlay">
   <div class="box">
     <h1>제주살이 플래너</h1>
@@ -373,32 +380,32 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),Math.min(5000,1800+s.length*40))}
 
 const raw=[
-['1','시흥초등학교 → 광치기해변','14.9km','4~5시간','mid','말미오름·알오름을 넘고 성산일출봉을 바라보는 동쪽 코스.','33.4636,126.9151','33.4407,126.9270'],
-['1-1','우도 올레','11.3km','3~4시간','lo','성산항에서 배로 들어가 우도봉과 검멀레해변을 지나는 섬 코스.','33.5056,126.9508','33.5056,126.9508'],
-['2','광치기해변 → 온평포구','15.6km','5~6시간','mid','식산봉과 혼인지를 지나는 해안·마을길.','33.4407,126.9270','33.4331,126.8477'],
-['3','온평포구 → 표선해수욕장','20.6km','6~7시간','hi','A/B 코스로 나뉘는 긴 코스. 체력 배분이 중요합니다.','33.4331,126.8477','33.3255,126.8367'],
-['4','표선해수욕장 → 남원포구','19km','6~7시간','hi','해안 마을을 잇는 비교적 평탄한 코스.','33.3255,126.8367','33.2794,126.7154'],
-['5','남원포구 → 쇠소깍','13.4km','4~5시간','mid','해안과 마을길을 걷는 코스.','33.2794,126.7154','33.2481,126.6135'],
-['6','쇠소깍 → 서귀포 올레여행자센터','11km','3~4시간','lo','소천지·소정방폭포·이중섭거리를 지나는 짧은 코스.','33.2481,126.6135','33.2456,126.5605'],
-['7','서귀포 올레여행자센터 → 월평아왜낭목쉼터','17.6km','6시간','hi','외돌개·황우지해안 등 서귀포 해안절경을 잇는 인기 코스.','33.2456,126.5605','33.2404,126.4956'],
-['7-1','서귀포시청 → 서귀포자연휴양림','15.6km','5시간','mid','숲길 위주의 내륙 코스.','33.2536,126.5133','33.3122,126.5344'],
-['8','월평아왜낭목쉼터 → 대평포구','19.6km','6~7시간','hi','중문·대평 해안절벽길을 따라 걷는 코스.','33.2404,126.4956','33.2308,126.4267'],
-['9','대평포구 → 화순금모래해수욕장','10km','3~4시간','lo','박수기정 절벽을 조망하는 짧고 인상적인 코스.','33.2308,126.4267','33.2372,126.3625'],
-['10','화순금모래해수욕장 → 하모체육공원','15.6km','5~6시간','mid','산방산과 송악산을 지나는 서남부 코스.','33.2372,126.3625','33.2133,126.2514'],
-['10-1','가파도 올레','4.2km','1~2시간','lo','청보리밭으로 유명한 짧은 섬 코스.','33.1728,126.2687','33.1728,126.2687'],
-['11','하모체육공원 → 무릉외갓집','17.5km','5~6시간','mid','모슬포에서 내륙 마을을 지나는 코스.','33.2133,126.2514','33.2789,126.2954'],
-['12','무릉외갓집 → 용수포구','17.5km','5~6시간','hi','오르막이 있는 서남부 코스.','33.2789,126.2954','33.3011,126.1934'],
-['13','용수포구 → 저지예술정보화마을','14.7km','4~5시간','mid','숲길 구간이 포함된 코스.','33.3011,126.1934','33.3210,126.2611'],
-['14','저지예술정보화마을 → 한림항','19.1km','6시간','hi','마을과 밭길을 지나 한림항으로.','33.3210,126.2611','33.4114,126.2657'],
-['14-1','저지 → 서광리 다원','19km','6시간','lo','곶자왈 숲길이 많은 코스.','33.3210,126.2611','33.3011,126.3315'],
-['15','한림항 → 고내포구','17.3km','6시간','mid','해안과 마을길을 잇는 서쪽 코스.','33.4114,126.2657','33.4633,126.3097'],
-['16','고내포구 → 광령1리사무소','15.8km','5~6시간','mid','애월 해안을 지나는 서쪽 코스.','33.4633,126.3097','33.4653,126.4596'],
-['17','광령1리사무소 → 제주원도심','18.2km','6시간','mid','공항 인근을 지나 원도심으로.','33.4653,126.4596','33.5135,126.5257'],
-['18','제주원도심 → 조천만세동산','19.1km','6시간','mid','원도심에서 동쪽 조천읍으로.','33.5135,126.5257','33.5401,126.6398'],
-['18-1','추자도 올레','18.2km','6~7시간','hi','배로 이동하는 섬 코스. 오르내림이 많습니다.','33.9636,126.3011','33.9636,126.3011'],
-['19','조천만세동산 → 김녕서포구','19.4km','6시간','mid','동북부 해안을 따라 걷는 코스.','33.5401,126.6398','33.5561,126.7529'],
-['20','김녕서포구 → 하도해녀박물관','17.3km','5~6시간','mid','해안 마을과 밭길을 지나는 코스.','33.5561,126.7529','33.5279,126.8579'],
-['21','하도해녀박물관 → 종달바당','11.3km','3~4시간','lo','지미봉과 토끼섬을 지나는 마지막 코스.','33.5279,126.8579','33.5178,126.9130']
+['1','시흥초등학교 → 광치기해변','14.9km','4~5시간','mid','말미오름과 알오름을 넘으며 성산일출봉과 우도를 한눈에 담는 \'오름-바당\' 코스. 초반 오름 구간만 넘으면 이후는 완만한 해안·마을길이 이어져요.','33.4636,126.9151','33.4407,126.9270'],
+['1-1','우도 올레','11.3km','3~4시간','lo','성산항에서 배를 타고 들어가는 섬 코스. 우도봉 정상의 바다 전망과 검멀레해변·서빈백사 같은 우도만의 독특한 해변을 걸어요.','33.5056,126.9508','33.5056,126.9508'],
+['2','광치기해변 → 온평포구','15.6km','5~6시간','mid','광치기해변의 암반 비경으로 시작해 낮은 오름인 식산봉을 넘고, 삼성신화가 깃든 혼인지를 지나는 비교적 평탄한 해안·마을길이에요.','33.4407,126.9270','33.4331,126.8477'],
+['3','온평포구 → 표선해수욕장','20.6km','6~7시간','hi','올레길 중 가장 긴 구간에 속해요. 중산간(A코스)과 해안(B코스)으로 나뉘며, 신풍·신천 바다목장의 넓은 초원과 해안 풍경이 인상적이에요.','33.4331,126.8477','33.3255,126.8367'],
+['4','표선해수욕장 → 남원포구','19km','6~7시간','hi','표선해수욕장에서 시작해 해안 마을들을 잇는 비교적 평탄한 코스로, 걷기 편해 가족 단위로도 무난해요.','33.3255,126.8367','33.2794,126.7154'],
+['5','남원포구 → 쇠소깍','13.4km','4~5시간','mid','큰엉경관로의 기암절벽과 위미리 동백나무 군락을 지나, 민물과 바닷물이 만나는 명소인 쇠소깍에서 마무리돼요.','33.2794,126.7154','33.2481,126.6135'],
+['6','쇠소깍 → 서귀포 올레여행자센터','11km','3~4시간','lo','소천지·소정방폭포 같은 아기자기한 명소를 지나 이중섭거리까지 이어지는, 비교적 짧고 부담 없는 코스예요.','33.2481,126.6135','33.2456,126.5605'],
+['7','서귀포 올레여행자센터 → 월평아왜낭목쉼터','17.6km','6시간','hi','외돌개와 황우지해안 등 서귀포를 대표하는 해안절경을 잇는 인기 코스로, 사진 찍기 좋은 구간이 많아요.','33.2456,126.5605','33.2404,126.4956'],
+['7-1','서귀포시청 → 서귀포자연휴양림','15.6km','5시간','mid','해안 위주인 다른 코스와 달리 숲과 오름 위주의 내륙 코스예요. 비 온 뒤에만 물줄기가 나타나는 엉또폭포와 고근산을 지나요.','33.2536,126.5133','33.3122,126.5344'],
+['8','월평아왜낭목쉼터 → 대평포구','19.6km','6~7시간','hi','중문·대평 해안절벽을 따라 걷는 코스로, 웅장한 주상절리와 중문색달해변 등 유명 관광지가 몰려 있어요.','33.2404,126.4956','33.2308,126.4267'],
+['9','대평포구 → 화순금모래해수욕장','10km','3~4시간','lo','대평포구에서 올려다보는 박수기정 절벽이 압권인, 짧지만 인상 깊은 코스예요.','33.2308,126.4267','33.2372,126.3625'],
+['10','화순금모래해수욕장 → 하모체육공원','15.6km','5~6시간','mid','산방산과 송악산을 가까이서 볼 수 있는 서남부 대표 코스로, 사계해안의 탁 트인 바다 전망도 함께 즐길 수 있어요.','33.2372,126.3625','33.2133,126.2514'],
+['10-1','가파도 올레','4.2km','1~2시간','lo','모슬포에서 배로 들어가는 평평한 섬 코스. 봄철 청보리밭과 사방으로 트인 바다 전망으로 유명해요.','33.1728,126.2687','33.1728,126.2687'],
+['11','하모체육공원 → 무릉외갓집','17.5km','5~6시간','mid','모슬봉을 넘고 내륙 마을길을 지나는 코스로, 해안 코스와는 다른 제주 중산간 풍경을 볼 수 있어요.','33.2133,126.2514','33.2789,126.2954'],
+['12','무릉외갓집 → 용수포구','17.5km','5~6시간','hi','신도생태연못, 수월봉, 당산봉을 연달아 오르내리는 코스로 힘들지만 그만큼 전망이 좋아요.','33.2789,126.2954','33.3011,126.1934'],
+['13','용수포구 → 저지예술정보화마을','14.7km','4~5시간','mid','용수저수지와 숲길 구간이 많아 다른 해안 코스와는 분위기가 다른, 걷기 좋은 중산간 코스예요.','33.3011,126.1934','33.3210,126.2611'],
+['14','저지예술정보화마을 → 한림항','19.1km','6시간','hi','저지 마을에서 시작해 밭담길과 마을길을 지나 한림항 바다까지 이어지는 코스예요.','33.3210,126.2611','33.4114,126.2657'],
+['14-1','저지 → 서광리 다원','19km','6시간','lo','곶자왈 원시림 숲길이 많은 부속 코스로, 다른 코스보다 그늘이 많아 여름에도 비교적 걷기 좋아요.','33.3210,126.2611','33.3011,126.3315'],
+['15','한림항 → 고내포구','17.3km','6시간','mid','곽지해수욕장 등 서쪽 해변을 지나는 해안·마을 코스로, 애월 특유의 감성적인 카페거리와도 가까워요.','33.4114,126.2657','33.4633,126.3097'],
+['16','고내포구 → 광령1리사무소','15.8km','5~6시간','mid','삼별초의 최후 항쟁지인 항파두리 항몽유적지와 하가리 연꽃마을을 지나는, 역사와 자연이 함께하는 코스예요.','33.4633,126.3097','33.4653,126.4596'],
+['17','광령1리사무소 → 제주원도심','18.2km','6시간','mid','제주공항 인근을 지나 제주 원도심까지 이어지는 코스로, 도심 속을 걷는 올레길이라는 특별함이 있어요.','33.4653,126.4596','33.5135,126.5257'],
+['18','제주원도심 → 조천만세동산','19.1km','6시간','mid','사라봉에서 바라보는 제주 시내 전망과, 검은 모래로 유명한 삼양해수욕장을 지나는 코스예요.','33.5135,126.5257','33.5401,126.6398'],
+['18-1','추자도 올레','18.2km','6~7시간','hi','배를 타고 들어가는 섬 코스로 오르내림이 많아 체력 소모가 큰 편이지만, 그만큼 탁 트인 바다 전망이 특별해요.','33.9636,126.3011','33.9636,126.3011'],
+['19','조천만세동산 → 김녕서포구','19.4km','6시간','mid','에메랄드빛으로 유명한 함덕서우봉해변과 서우봉을 지나는, 제주 동쪽 해안의 대표적인 인기 코스예요.','33.5401,126.6398','33.5561,126.7529'],
+['20','김녕서포구 → 하도해녀박물관','17.3km','5~6시간','mid','월정리·세화 해변의 카페거리를 지나는 코스로, 이국적인 에메랄드빛 바다를 오래 곁에 두고 걸을 수 있어요.','33.5561,126.7529','33.5279,126.8579'],
+['21','하도해녀박물관 → 종달바당','11.3km','3~4시간','lo','지미봉 정상에서 마지막 전망을 즐기고 토끼섬을 지나 종달리 바당에서 정규 코스의 대장정을 마무리해요.','33.5279,126.8579','33.5178,126.9130']
 ];
 const courses=raw.map(x=>({n:x[0],name:x[1],dist:x[2],time:x[3],level:x[4],desc:x[5],start:x[6].split(',').map(Number),end:x[7].split(',').map(Number)}));
 const level={lo:'하',mid:'중',hi:'상'};
@@ -456,6 +463,10 @@ function renderCourses(){
   </div>`;
   el.querySelector('.plan').onclick=()=>{toggle(profile.plan,id);save();renderAll()};
   el.querySelector('.check').onclick=()=>{toggle(profile.done,id);save();renderAll()};
+  el.querySelector('.num').style.cursor='pointer';
+  el.querySelector('.num').onclick=()=>openCourseDetail(c.n);
+  el.querySelector('h3').style.cursor='pointer';
+  el.querySelector('h3').onclick=()=>openCourseDetail(c.n);
   const mapTab=el.querySelector('.map-tab'),stopsTab=el.querySelector('.stops-tab');
   const mapPanel=el.querySelector('.map-panel'),stopsPanel=el.querySelector('.stops-panel');
   const closeAll=()=>{mapPanel.classList.add('hidden');stopsPanel.classList.add('hidden');mapTab.classList.remove('active-seg');stopsTab.classList.remove('active-seg')};
@@ -475,6 +486,43 @@ function renderCourses(){
   list.appendChild(el);
  });
 }
+const allFoodItems=localFoodData.flatMap(g=>g.items);
+function openCourseDetail(n){
+ const c=courses.find(x=>x.n===n);if(!c)return;
+ const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+ const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
+ const nearFood=allFoodItems.map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const foodHtml=nearFood.length?nearFood.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 맛집 정보가 아직 없어요.</p>';
+ const stopsNear=findNearestBusStops(c.start[0],c.start[1],2);
+ const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
+ const content=document.getElementById('courseDetailContent');
+ content.innerHTML=`
+  <div class="num" style="width:44px;height:44px;font-size:16px">${esc(c.n)}</div>
+  <h2 class="title" style="margin:10px 0 0">${esc(c.name)}</h2>
+  <div class="meta" style="margin:6px 0"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div>
+  <p class="desc">${esc(c.desc)}</p>
+  <div class="actions">
+   <button class="btn blue" id="detailPlanBtn" type="button">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button>
+   <button class="btn" id="detailCheckBtn" type="button">${done?'✓ 완주함':'완주 체크'}</button>
+   <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
+  </div>
+  <h3>🍽 코스 주변 맛집</h3>
+  ${foodHtml}
+  <h3>🚏 시작점 주변 정류장</h3>
+  ${stopsHtml}
+ `;
+ wireArrivalButtons(content);
+ document.getElementById('detailPlanBtn').onclick=()=>{toggle(profile.plan,id);save();renderAll();openCourseDetail(n)};
+ document.getElementById('detailCheckBtn').onclick=()=>{toggle(profile.done,id);save();renderAll();openCourseDetail(n)};
+ document.getElementById('courseDetailOverlay').classList.remove('hidden');
+ window.scrollTo({top:0});
+ if(!history.state||history.state.courseDetail!==n)history.pushState({courseDetail:n},'','#course-'+n);
+}
+function closeCourseDetail(){
+ document.getElementById('courseDetailOverlay').classList.add('hidden');
+}
+window.addEventListener('popstate',()=>{closeCourseDetail()});
+document.getElementById('courseDetailBack').onclick=()=>{history.back()};
 function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
  const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
