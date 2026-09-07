@@ -22,6 +22,9 @@ main{padding:18px}.section{display:none}.section.active{display:block}.title{fon
 .card{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:15px;margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid2{grid-template-columns:1fr}}
 .stat{padding:12px;border:1px solid var(--line);background:var(--white);border-radius:7px}.stat b{display:block;font-size:22px}.stat span{font-size:11px;color:var(--muted)}
 .progress{height:8px;background:var(--stone2);border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--sea);width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:8px 11px;border-radius:20px;font-weight:750;font-size:12px;cursor:pointer}.btn.primary{background:var(--orange);border-color:var(--orange);color:white}.btn.blue{background:var(--blue);border-color:var(--blue);color:white}.btn.green{background:var(--sea);border-color:var(--sea);color:white}.btn.danger{color:var(--red)}
+.seg-tabs{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}.seg-tab{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:5px 9px;border-radius:14px;font-weight:750;font-size:11px;cursor:pointer}.seg-tab.active-seg{background:var(--ink);border-color:var(--ink);color:#fff}.seg-panel{margin-top:8px}
+.btn.kakao{background:#FEE500;border-color:#FEE500;color:#3C1E1E}.btn.tmap{background:#1B2A4A;border-color:#1B2A4A;color:#fff}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--line);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin-right:5px;vertical-align:-1px}@keyframes spin{to{transform:rotate(360deg)}}
 .banner{background:#FBE9D6;color:#A95B20;border-radius:7px;padding:11px 13px;font-size:12px;font-weight:700;margin-bottom:12px}
 .pref-btn.active{background:var(--orange);border-color:var(--orange);color:#fff}
 .dur-btn.active{background:var(--sea);border-color:var(--sea);color:#fff}
@@ -522,7 +525,7 @@ function renderMap(){
   stay+=`<g class="stay-node" data-name="${esc(s.name)}" data-range="${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}"><path d="M${x},${y-14}l8,11h-16z" fill="#8B5FA0" stroke="#fff"/><rect x="${x-7}" y="${y-3}" width="14" height="10" fill="#8B5FA0" stroke="#fff"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" pointer-events="none">${idx+1}</text></g>`;
  });
  const pts=ring.map(c=>project(...c.start));
- wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#DCEAEF"/><path d="${smooth(pts)}" fill="#D7E4C4" stroke="#9CB584" stroke-width="2"/><circle cx="${W*.47}" cy="${H*.5}" r="5" fill="#6E8F58"/><text x="${W*.47}" y="${H*.5-10}" text-anchor="middle" font-size="9" fill="#5C7A4C">한라산</text>${extras}${seg}${dots}${stay}</svg>`;
+ wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#DCEAEF"/><path d="${smooth(pts)}" fill="#D7E4C4" stroke="#9CB584" stroke-width="16" stroke-linejoin="round"/><circle cx="${W*.47}" cy="${H*.5}" r="5" fill="#6E8F58"/><text x="${W*.47}" y="${H*.5-10}" text-anchor="middle" font-size="9" fill="#5C7A4C">한라산</text>${extras}${seg}${dots}${stay}</svg>`;
  wrap.querySelectorAll('.map-node').forEach(n=>n.onclick=()=>{const c=courses.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`});
  wrap.querySelectorAll('.food-node').forEach(n=>n.onclick=()=>document.getElementById('mapSelected').textContent='📍 '+n.dataset.name);
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`);
@@ -536,8 +539,14 @@ function renderStayTab(){
   const n=nightsBetween(s.checkin,s.checkout);
   const range=`${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}${n!==null?` · ${n}박`:''}`;
   const locTxt=s.lat!=null?'📍 위치 확인됨':'📍 위치 미확인';
-  return `<div class="course" style="align-items:center"><div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div><div style="flex:1"><h3>${esc(s.name)}</h3><div class="meta">${range} · ${locTxt}</div>${dirButtonsHtml(s.lat,s.lng,s.name)}${nearbyCoursesHtml(s)}</div></div>`;
+  const tabsHtml=segTabsHtml('staytab-'+s.id,[
+   {label:'🚗 길찾기',html:dirButtonsHtml(s.lat,s.lng,s.name)},
+   {label:'🥾 가까운 코스',html:nearbyCoursesChipsHtml(s)},
+   {label:'🚏 가까운 정류장',html:nearbyStopsPanelHtml(s)}
+  ]);
+  return `<div class="course" style="align-items:center"><div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div><div style="flex:1"><h3>${esc(s.name)}</h3><div class="meta">${range} · ${locTxt}</div>${tabsHtml}</div></div>`;
  }).join('');
+ wireSegTabs(el);
 }
 
 function fmtMD(s){if(!s)return '?';const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`}
@@ -557,12 +566,12 @@ function dirLinks(lat,lng,name){
  };
 }
 function dirButtonsHtml(lat,lng,name){
- if(lat==null||lng==null)return'';
+ if(lat==null||lng==null)return'<p class="small">위치가 확인되지 않아 길찾기를 열 수 없어요.</p>';
  const L=dirLinks(lat,lng,name);
- return `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
-  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.kakao}" target="_blank" rel="noopener">🚌 카카오맵 길찾기</a>
-  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.tmap}" rel="noopener">🚕 티맵 길찾기</a>
-  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.gmap}" target="_blank" rel="noopener">🌏 구글맵 길찾기</a>
+ return `<div style="display:flex;gap:6px;flex-wrap:wrap">
+  <a class="btn kakao" style="padding:4px 8px;font-size:10px" href="${L.kakao}" target="_blank" rel="noopener">🚌 카카오맵</a>
+  <a class="btn tmap" style="padding:4px 8px;font-size:10px" href="${L.tmap}" rel="noopener">🚕 티맵</a>
+  <a class="btn" style="padding:4px 8px;font-size:10px" href="${L.gmap}" target="_blank" rel="noopener">🌏 구글맵</a>
  </div>`;
 }
 function findNearestBusStops(lat,lng,limit){
@@ -629,7 +638,7 @@ function stopCardHtml(item){
    <h3>${esc(s.name)}</h3>
    <div class="meta">${item.dist.toFixed(2)}km · ID ${esc(s.id)}</div>
    <div class="arrival-slot"></div>
-   ${dirButtonsHtml(s.lat,s.lng,s.name+' 정류장')}
+   <div style="margin-top:6px">${dirButtonsHtml(s.lat,s.lng,s.name+' 정류장')}</div>
    <button class="btn" type="button" data-arrival="${esc(s.id)}" data-lat="${s.lat}" data-lng="${s.lng}" style="margin-top:6px;padding:4px 8px;font-size:10px">🚌 실시간 도착정보</button>
   </div>
  </div>`;
@@ -642,7 +651,7 @@ function wireArrivalButtons(container){
    const stopId=btn.dataset.arrival;
    const stopName=card.querySelector('h3').textContent;
    const lat=parseFloat(btn.dataset.lat),lng=parseFloat(btn.dataset.lng);
-   slot.innerHTML='<p class="small">조회 중…</p>';
+   slot.innerHTML='<p class="small"><span class="spinner"></span>조회 중…</p>';
    const r=await fetchBusArrival({id:stopId,name:stopName,lat,lng});
    const kakaoSearch=`https://map.kakao.com/link/search/${encodeURIComponent(stopName+' 정류장')}`;
    if(!r.ok){
@@ -670,15 +679,47 @@ function nearestCourses(stay,limit=3){
   return {course:c,dist:haversineKm(stay.lat,stay.lng,midLat,midLng)};
  }).sort((a,b)=>a.dist-b.dist).slice(0,limit);
 }
-function nearbyCoursesHtml(stay){
- if(stay.lat==null||stay.lng==null)return'';
+function nearbyCoursesChipsHtml(stay){
+ if(stay.lat==null||stay.lng==null)return'<p class="small">위치가 확인되지 않아 계산할 수 없어요.</p>';
  const near=nearestCourses(stay,3);
- if(!near.length)return'';
+ if(!near.length)return'<p class="small">근처 코스를 찾지 못했어요.</p>';
  const chips=near.map(x=>{
   const planned=profile.plan.includes('course-'+x.course.n);
-  return `<button class="btn nearby-course-chip" type="button" data-course="${esc(x.course.n)}" style="padding:4px 8px;font-size:10px;margin:2px 4px 0 0${planned?';background:var(--blue);border-color:var(--blue);color:#fff':''}">올레 ${esc(x.course.n)} · ${x.dist.toFixed(1)}km${planned?' ✓':''}</button>`;
+  return `<button class="btn nearby-course-chip" type="button" data-course="${esc(x.course.n)}" style="padding:4px 8px;font-size:10px;margin:2px 4px 4px 0${planned?';background:var(--blue);border-color:var(--blue);color:#fff':''}">올레 ${esc(x.course.n)} · ${x.dist.toFixed(1)}km${planned?' ✓':''}</button>`;
  }).join('');
- return `<div class="small" style="margin-top:6px">🥾 가까운 코스 (탭하면 여행 계획에 추가/제거)</div><div style="margin-top:2px">${chips}</div>`;
+ return `<div class="small" style="margin-bottom:2px">탭하면 여행 계획에 추가/제거돼요</div><div>${chips}</div>`;
+}
+function nearbyStopsPanelHtml(stay){
+ if(stay.lat==null||stay.lng==null)return'<p class="small">위치가 확인되지 않아 계산할 수 없어요.</p>';
+ const near=findNearestBusStops(stay.lat,stay.lng,3);
+ if(!near.length)return'<p class="small">근처 정류장을 찾지 못했어요.</p>';
+ return near.map(stopCardHtml).join('');
+}
+function segTabsHtml(id,tabs){
+ const btns=tabs.map((t,i)=>`<button type="button" class="seg-tab" data-seg="${esc(id)}" data-idx="${i}">${t.label}</button>`).join('');
+ const panels=tabs.map((t,i)=>`<div class="seg-panel hidden" data-seg-panel="${esc(id)}" data-idx="${i}">${t.html}</div>`).join('');
+ return `<div class="seg-tabs">${btns}</div>${panels}`;
+}
+function wireSegTabs(container){
+ container.querySelectorAll('.seg-tab').forEach(btn=>{
+  btn.onclick=()=>{
+   const id=btn.dataset.seg,idx=btn.dataset.idx;
+   const panels=container.querySelectorAll(`[data-seg-panel="${id}"]`);
+   const tabs=container.querySelectorAll(`[data-seg="${id}"]`);
+   const wasActive=btn.classList.contains('active-seg');
+   panels.forEach(p=>p.classList.add('hidden'));
+   tabs.forEach(t=>t.classList.remove('active-seg'));
+   if(!wasActive){
+    const target=container.querySelector(`[data-seg-panel="${id}"][data-idx="${idx}"]`);
+    if(target)target.classList.remove('hidden');
+    btn.classList.add('active-seg');
+   }
+  };
+ });
+ wireArrivalButtons(container);
+ container.querySelectorAll('.nearby-course-chip').forEach(chip=>{
+  chip.onclick=()=>{toggle(profile.plan,'course-'+chip.dataset.course);save();renderAll()};
+ });
 }
 function renderStays(){
  const list=document.getElementById('staysList');
@@ -688,13 +729,17 @@ function renderStays(){
   const n=nightsBetween(s.checkin,s.checkout);
   const range=`${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}${n!==null?` · ${n}박`:''}`;
   const locTxt=s.lat!=null?'📍 위치 확인됨':'📍 위치 미확인';
+  const tabsHtml=segTabsHtml('stay-'+s.id,[
+   {label:'🚗 길찾기',html:dirButtonsHtml(s.lat,s.lng,s.name)},
+   {label:'🥾 가까운 코스',html:nearbyCoursesChipsHtml(s)},
+   {label:'🚏 가까운 정류장',html:nearbyStopsPanelHtml(s)}
+  ]);
   return `<div class="course" style="align-items:center">
     <div class="num" style="border-color:var(--purple);color:var(--purple)">🏠</div>
     <div style="flex:1">
       <h3>${esc(s.name)}</h3>
       <div class="meta">${range} · ${locTxt}</div>
-      ${dirButtonsHtml(s.lat,s.lng,s.name)}
-      ${nearbyCoursesHtml(s)}
+      ${tabsHtml}
     </div>
     <div class="actions" style="margin-top:0">
       <button class="btn" data-edit-stay="${s.id}" type="button">✎</button>
@@ -708,6 +753,7 @@ function renderStays(){
   profile.stays=(profile.stays||[]).filter(s=>s.id!==b.dataset.delStay);
   save();renderStays();toast('숙소를 삭제했습니다');
  });
+ wireSegTabs(list);
 }
 function openStayForm(editId){
  const form=document.getElementById('stayForm');
