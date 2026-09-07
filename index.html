@@ -188,6 +188,8 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <section id="food" class="section">
   <h2 class="title">로컬 맛집</h2><p class="sub">현재는 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인하세요.</p>
   <div id="foodStaticList"></div>
+  <h2 class="title" style="margin-top:24px">주변 볼거리</h2><p class="sub">지역별 대표 관광지예요. 방문 전 최신 운영정보를 확인하세요.</p>
+  <div id="attractionStaticList"></div>
   <div class="card" id="addPlaceWizard">
     <b>내 장소 추가</b>
     <div class="wizard-steps" id="wizardSteps">
@@ -413,24 +415,100 @@ const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','1
 const BRANCH=['1-1','7-1','10-1','14-1','18-1'];
 const foodSpots=[['동문시장 해산물',33.5138,126.5292],['동문시장 간식',33.5140,126.5296],['노형동 코시롱',33.4869,126.4783],['애월 카페거리',33.4633,126.3097],['서귀포매일올레시장',33.2537,126.5619],['이중섭거리',33.2489,126.5628],['성산 해녀의 집',33.4589,126.9425],['종달리 카페거리',33.5178,126.9130]];
 const localFoodData=[
- {region:'제주시 · 동문시장',items:[
+ {region:'성산 · 표선 (동부)',items:[
+  {name:'성산 해녀의 집 계열',desc:'성게미역국·전복죽 등 해녀 직판 음식',lat:33.4589,lng:126.9425},
+  {name:'표선 몸국거리',desc:'몸국·접짝뼈국 등 제주 전통 국물요리',lat:33.3255,lng:126.8367},
+  {name:'신풍·신천 해안가 식당',desc:'흑돼지 구이, 해안 뷰 식당',lat:33.3255,lng:126.8590}
+ ]},
+ {region:'남원 · 서귀포',items:[
+  {name:'남원 큰엉 인근 향토식당',desc:'전복뚝배기, 갈치조림',lat:33.2794,lng:126.7154},
+  {name:'서귀포매일올레시장',desc:'시장 먹거리(빙떡, 오메기떡 등)',lat:33.2537,lng:126.5619},
+  {name:'이중섭거리 주변',desc:'몸국·고기국수',lat:33.2489,lng:126.5628}
+ ]},
+ {region:'중문 · 대평 (남서부)',items:[
+  {name:'중문색달해변 인근 식당가',desc:'흑돼지구이, 해산물 뷔페',lat:33.2404,lng:126.4189},
+  {name:'대평포구 카페거리',desc:'박수기정 뷰 카페',lat:33.2308,lng:126.4267}
+ ]},
+ {region:'대정 · 모슬포 (서남부)',items:[
+  {name:'모슬포항 방어회거리',desc:'제철 방어회(가을~겨울 특히 유명)',lat:33.2133,lng:126.2514},
+  {name:'산방산 근처 향토식당',desc:'제주 전통 흑돼지 두루치기',lat:33.2372,lng:126.3115}
+ ]},
+ {region:'한경 · 한림 (서부)',items:[
+  {name:'협재해수욕장 인근 카페·식당',desc:'해변 뷰 카페, 갈치조림',lat:33.3941,lng:126.2397},
+  {name:'금능해수욕장 주변',desc:'조용한 해변가 식당',lat:33.3925,lng:126.2287}
+ ]},
+ {region:'애월 (서쪽)',items:[
+  {name:'애월 해안도로 카페거리',desc:'오션뷰 카페',lat:33.4633,lng:126.3097},
+  {name:'애월 한담해안산책로 인근',desc:'해안뷰 맛집·베이커리',lat:33.4633,lng:126.3167}
+ ]},
+ {region:'제주시 원도심 · 노형',items:[
   {name:'동문시장 해산물 식당',desc:'갈치조림·구이, 고등어회',lat:33.5138,lng:126.5292},
   {name:'동문시장 오란다·과즐',desc:'시장 간식',lat:33.5140,lng:126.5296},
   {name:'노형동 코시롱',desc:'흑돼지 한정식',lat:33.4869,lng:126.4783}
  ]},
- {region:'애월 · 서쪽',items:[
-  {name:'애월 해안도로 카페거리',desc:'오션뷰 카페',lat:33.4633,lng:126.3097},
-  {name:'애월 유니호텔 코시롱',desc:'한정식',lat:33.4633,lng:126.3097}
- ]},
- {region:'서귀포',items:[
-  {name:'서귀포매일올레시장',desc:'시장 먹거리',lat:33.2537,lng:126.5619},
-  {name:'이중섭거리 주변',desc:'몸국·고기국수',lat:33.2489,lng:126.5628}
- ]},
- {region:'성산 · 동쪽',items:[
-  {name:'성산일출봉 인근 해녀의 집',desc:'성게비빔밥',lat:33.4589,lng:126.9425},
-  {name:'종달리 카페거리',desc:'카페',lat:33.5178,lng:126.9130}
+ {region:'조천 · 구좌 (동북부)',items:[
+  {name:'함덕서우봉해변 카페거리',desc:'에메랄드빛 해변 뷰 카페',lat:33.5432,lng:126.6698},
+  {name:'월정리 카페거리',desc:'해변 감성 카페 밀집 지역',lat:33.5561,lng:126.7962},
+  {name:'세화·종달리 카페거리',desc:'조용한 해변 카페, 당근빵',lat:33.5279,lng:126.8579}
  ]}
 ];
+const attractionData=[
+ {region:'성산 · 표선 (동부)',items:[
+  {name:'성산일출봉',desc:'유네스코 세계자연유산. 일출 명소로 유명한 화산 응회구',lat:33.4587,lng:126.9425},
+  {name:'섭지코지',desc:'해안 절벽과 등대가 있는 드라마 촬영지',lat:33.4238,lng:126.9271},
+  {name:'표선해수욕장',desc:'썰물 때 넓은 백사장이 드러나는 얕은 바다',lat:33.3255,lng:126.8367}
+ ]},
+ {region:'남원 · 서귀포',items:[
+  {name:'쇠소깍',desc:'민물과 바닷물이 만나는 협곡, 투명카약 체험지',lat:33.2481,lng:126.6135},
+  {name:'외돌개',desc:'바다 위 우뚝 솟은 바위기둥과 황우지해안',lat:33.2333,lng:126.5459},
+  {name:'정방폭포',desc:'바다로 직접 떨어지는 국내 유일의 해안 폭포',lat:33.2419,lng:126.5711}
+ ]},
+ {region:'중문 · 대평',items:[
+  {name:'중문색달해변',desc:'서핑으로 유명한 남쪽 대표 해변',lat:33.2436,lng:126.4111},
+  {name:'대포주상절리대',desc:'육각형 돌기둥이 늘어선 해안 절경',lat:33.2367,lng:126.4297},
+  {name:'박수기정',desc:'대평포구 옆 깎아지른 해안 절벽',lat:33.2308,lng:126.4267}
+ ]},
+ {region:'대정 · 모슬포',items:[
+  {name:'산방산',desc:'제주 서남부를 대표하는 종 모양의 큰 산',lat:33.2372,lng:126.3115},
+  {name:'송악산',desc:'해안 둘레길과 알오름 전망이 좋은 오름',lat:33.2075,lng:126.2969},
+  {name:'사계해안',desc:'산방산이 배경으로 보이는 넓은 해안',lat:33.2280,lng:126.3095}
+ ]},
+ {region:'한경 · 한림',items:[
+  {name:'협재해수욕장',desc:'에메랄드빛 바다와 비양도 전망이 유명한 해변',lat:33.3941,lng:126.2397},
+  {name:'한림공원',desc:'용암동굴과 아열대 식물원이 있는 테마파크',lat:33.3944,lng:126.2500},
+  {name:'수월봉',desc:'화산재 지층이 드러난 해안 절벽, 지질트레일',lat:33.3011,lng:126.1636}
+ ]},
+ {region:'애월',items:[
+  {name:'한담해안산책로',desc:'애월 카페거리와 이어지는 해안 산책로',lat:33.4633,lng:126.3167},
+  {name:'곽지해수욕장',desc:'백사장과 용천수가 함께 있는 해변',lat:33.4517,lng:126.3117}
+ ]},
+ {region:'제주시 원도심 · 노형',items:[
+  {name:'사라봉',desc:'제주 시내와 바다를 함께 조망하는 오름',lat:33.5197,lng:126.5528},
+  {name:'용두암·용연',desc:'용이 승천하는 모습을 닮은 해안 기암',lat:33.5147,lng:126.5147},
+  {name:'항파두리 항몽유적지',desc:'삼별초의 마지막 항쟁지, 넓은 유채꽃밭',lat:33.4653,lng:126.4187}
+ ]},
+ {region:'조천 · 구좌',items:[
+  {name:'함덕서우봉해변',desc:'에메랄드빛 물빛으로 유명한 제주 대표 해변',lat:33.5432,lng:126.6698},
+  {name:'만장굴',desc:'세계자연유산에 등재된 대형 용암동굴',lat:33.5286,lng:126.7719},
+  {name:'월정리해변',desc:'카페거리와 어우러진 이국적인 해변',lat:33.5561,lng:126.7962}
+ ]}
+];
+const allAttractionItems=attractionData.flatMap(g=>g.items);
+function renderAttractionsStatic(){
+ const wrap=document.getElementById('attractionStaticList');if(!wrap)return;
+ wrap.innerHTML=attractionData.map(g=>{
+  const items=g.items.map(it=>{
+   const segId='attr-'+it.name.replace(/\s+/g,'');
+   const tabsHtml=segTabsHtml(segId,[
+    {label:'🚗 길찾기',html:dirButtonsHtml(it.lat,it.lng,it.name)},
+    {label:'🚏 주변 정류장',html:nearbyStopsPanelHtml({lat:it.lat,lng:it.lng})}
+   ]);
+   return `<div style="margin-bottom:10px"><div class="item">${esc(it.name)} · ${esc(it.desc)}</div>${tabsHtml}</div>`;
+  }).join('');
+  return `<div class="food card"><h3>${esc(g.region)}</h3>${items}</div>`;
+ }).join('');
+ wireSegTabs(wrap);
+}
 function renderFoodStatic(){
  const wrap=document.getElementById('foodStaticList');if(!wrap)return;
  wrap.innerHTML=localFoodData.map(g=>{
@@ -493,6 +571,8 @@ function openCourseDetail(n){
  const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
  const nearFood=allFoodItems.map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
  const foodHtml=nearFood.length?nearFood.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 맛집 정보가 아직 없어요.</p>';
+ const nearAttr=allAttractionItems.map(f=>({item:f,dist:haversineKm(c.start[0],c.start[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const attrHtml=nearAttr.length?nearAttr.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 관광지 정보가 아직 없어요.</p>';
  const stopsNear=findNearestBusStops(c.start[0],c.start[1],2);
  const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
  const content=document.getElementById('courseDetailContent');
@@ -506,6 +586,8 @@ function openCourseDetail(n){
    <button class="btn" id="detailCheckBtn" type="button">${done?'✓ 완주함':'완주 체크'}</button>
    <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
   </div>
+  <h3>🏞 코스 주변 볼거리</h3>
+  ${attrHtml}
   <h3>🍽 코스 주변 맛집</h3>
   ${foodHtml}
   <h3>🚏 시작점 주변 정류장</h3>
@@ -961,7 +1043,7 @@ function renderPeriod(){
  document.getElementById('periodSummary').textContent=`${fmt(sd)} ~ ${fmt(ed)} · 총 ${profile.days}일 (${weeks}주차까지)`;
  updateScheduleLabels();
 }
-function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
+function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
