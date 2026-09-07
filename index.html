@@ -573,42 +573,52 @@ function findNearestBusStops(lat,lng,limit){
 // 우리 정류장의 좌표로 TAGO의 nodeId·citycode를 찾아서 캐시해둠 (한 번 찾으면 재사용)
 const tagoNodeCache={};
 async function resolveTagoNode(stop){
- if(tagoNodeCache[stop.id])return tagoNodeCache[stop.id];
- if(!BUS_API_SERVICE_KEY)return null;
+ if(tagoNodeCache[stop.id])return {ok:true,node:tagoNodeCache[stop.id]};
+ if(!BUS_API_SERVICE_KEY)return {ok:false,debug:'서비스키가 비어있어요'};
+ const url=`${BUS_STTN_API_URL}?serviceKey=${encodeURIComponent(BUS_API_SERVICE_KEY)}&gpsLati=${stop.lat}&gpsLong=${stop.lng}&numOfRows=5&pageNo=1&_type=json`;
+ let res;
  try{
-  const url=`${BUS_STTN_API_URL}?serviceKey=${encodeURIComponent(BUS_API_SERVICE_KEY)}&gpsLati=${stop.lat}&gpsLong=${stop.lng}&numOfRows=5&pageNo=1&_type=json`;
-  const res=await fetch(url);
-  if(!res.ok)throw new Error('http '+res.status);
-  const data=await res.json();
-  const items=data&&data.response&&data.response.body&&data.response.body.items?data.response.body.items.item:null;
-  const list=Array.isArray(items)?items:(items?[items]:[]);
-  if(!list.length)return null;
-  const best=list[0]; // 근접순 첫번째를 같은 정류장으로 간주
-  const result={nodeid:best.nodeid,citycode:best.citycode};
-  tagoNodeCache[stop.id]=result;
-  return result;
+  res=await fetch(url);
  }catch(e){
-  return null;
+  return {ok:false,debug:'요청 자체가 막혔어요(CORS 가능성 높음): '+((e&&e.message)||e)};
  }
+ const text=await res.text().catch(()=>'');
+ if(!res.ok)return {ok:false,debug:`HTTP ${res.status} 응답: ${text.slice(0,200)}`};
+ let data;
+ try{data=JSON.parse(text)}catch(e){return {ok:false,debug:'JSON이 아닌 응답(앞부분): '+text.slice(0,200)}}
+ const header=data&&data.response&&data.response.header;
+ if(header&&header.resultCode&&header.resultCode!=='00')return {ok:false,debug:`API 오류 ${header.resultCode}: ${header.resultMsg||''}`};
+ const items=data&&data.response&&data.response.body&&data.response.body.items?data.response.body.items.item:null;
+ const list=Array.isArray(items)?items:(items?[items]:[]);
+ if(!list.length)return {ok:false,debug:'정상 응답이지만 근처 정류소 결과가 없어요'};
+ const best=list[0]; // 근접순 첫번째를 같은 정류장으로 간주
+ const result={nodeid:best.nodeid,citycode:best.citycode};
+ tagoNodeCache[stop.id]=result;
+ return {ok:true,node:result};
 }
 async function fetchBusArrival(stop){
  if(!BUS_API_SERVICE_KEY){
   return {ok:false,reason:'notconfigured'};
  }
- const node=await resolveTagoNode(stop);
- if(!node){
-  return {ok:false,reason:'nonodeid'};
+ const nodeRes=await resolveTagoNode(stop);
+ if(!nodeRes.ok){
+  return {ok:false,reason:'nonodeid',debug:nodeRes.debug};
  }
+ const node=nodeRes.node;
  try{
   const url=`${BUS_ARRIVAL_API_URL}?serviceKey=${encodeURIComponent(BUS_API_SERVICE_KEY)}&cityCode=${encodeURIComponent(node.citycode)}&nodeId=${encodeURIComponent(node.nodeid)}&numOfRows=10&pageNo=1&_type=json`;
   const res=await fetch(url);
-  if(!res.ok)throw new Error('http '+res.status);
-  const data=await res.json();
+  const text=await res.text().catch(()=>'');
+  if(!res.ok)return {ok:false,reason:'error',debug:`HTTP ${res.status} 응답: ${text.slice(0,200)}`};
+  let data;
+  try{data=JSON.parse(text)}catch(e){return {ok:false,reason:'error',debug:'JSON이 아닌 응답(앞부분): '+text.slice(0,200)}}
+  const header=data&&data.response&&data.response.header;
+  if(header&&header.resultCode&&header.resultCode!=='00')return {ok:false,reason:'error',debug:`API 오류 ${header.resultCode}: ${header.resultMsg||''}`};
   const items=data&&data.response&&data.response.body&&data.response.body.items?data.response.body.items.item:null;
   const list=Array.isArray(items)?items:(items?[items]:[]);
   return {ok:true,list};
  }catch(e){
-  return {ok:false,reason:'error',error:e};
+  return {ok:false,reason:'error',debug:'요청 자체가 막혔어요(CORS 가능성 높음): '+((e&&e.message)||e)};
  }
 }
 function stopCardHtml(item){
@@ -636,8 +646,9 @@ function wireArrivalButtons(container){
    const r=await fetchBusArrival({id:stopId,name:stopName,lat,lng});
    const kakaoSearch=`https://map.kakao.com/link/search/${encodeURIComponent(stopName+' 정류장')}`;
    if(!r.ok){
-    const msg=r.reason==='nonodeid'?'이 정류장의 실시간 조회 ID를 찾지 못했어요.':'실시간 도착정보를 불러오지 못했어요 (인증키 설정 또는 연결 문제).';
-    slot.innerHTML=`<p class="small">${msg} <a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵에서 정류장 검색 →</a></p>`;
+    const base=r.reason==='notconfigured'?'인증키가 설정되지 않았어요.':'실시간 도착정보를 불러오지 못했어요.';
+    const detail=r.debug?`<br><span style="color:#B0503C">🔍 원인: ${esc(r.debug)}</span>`:'';
+    slot.innerHTML=`<p class="small">${base}${detail}<br><a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵에서 정류장 검색 →</a></p>`;
     return;
    }
    if(!r.list.length){slot.innerHTML='<p class="small">현재 도착 예정인 버스가 없어요.</p>';return}
