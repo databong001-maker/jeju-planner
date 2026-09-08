@@ -101,8 +101,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <button data-tab="courses">올레길</button>
   <button data-tab="map">지도</button>
   <button data-tab="food">맛집</button>
-  <button data-tab="stay">숙소</button>
-  <button data-tab="transit">교통</button>
+  <button data-tab="transit">베이스</button>
   <button data-tab="notes">메모</button>
 </nav>
 
@@ -259,23 +258,19 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   </div>
 </section>
 
-<section id="stay" class="section">
-  <h2 class="title">숙소</h2><p class="sub">등록한 숙소 목록이에요. 추가·수정·삭제는 홈 화면 '숙소' 카드에서 할 수 있어요.</p>
-  <div id="stayTabList"></div>
-  <div class="actions" style="margin-top:10px"><button class="btn primary" id="goHomeAddStay" type="button">홈에서 숙소 추가/수정</button></div>
-</section>
-
 <section id="transit" class="section">
-  <h2 class="title">교통</h2><p class="sub">내 위치에서 가까운 버스정류장을 찾고, 실시간 도착정보를 확인해보세요.</p>
+  <h2 class="title">베이스</h2><p class="sub">숙소와 이동(정류장)을 한 곳에서 확인해요.</p>
   <div class="card">
-    <b>내 주변 정류장</b>
-    <p class="small" style="margin:4px 0 10px">위치 권한을 허용하면 가까운 정류장 순으로 보여드려요.</p>
-    <button class="btn primary" id="findNearStopsBtn" type="button" style="width:100%">📍 내 위치에서 가까운 정류장 찾기</button>
-    <div id="nearStopsResult" style="margin-top:10px"></div>
+    <b>숙소</b>
+    <p class="small" style="margin:4px 0 10px">등록한 숙소 목록이에요. 추가·수정·삭제는 홈 화면 '숙소' 카드에서 할 수 있어요.</p>
+    <div id="stayTabList"></div>
+    <div class="actions" style="margin-top:10px"><button class="btn primary" id="goHomeAddStay" type="button">홈에서 숙소 추가/수정</button></div>
   </div>
   <div class="card">
-    <b>실시간 도착정보 안내</b>
-    <p class="small">실시간 버스 도착정보는 공공데이터포털 인증키가 필요해요. 정류장 카드의 "실시간 도착정보" 버튼을 눌러 확인해보세요. 키가 설정되어 있지 않으면 카카오맵에서 대신 확인할 수 있는 버튼이 나와요.</p>
+    <b>내 주변 정류장</b>
+    <p class="small" style="margin:4px 0 10px">위치 권한을 허용하면 가까운 정류장 순으로 보여드려요. 실시간 도착정보는 정류장 카드의 버튼으로 확인할 수 있어요.</p>
+    <button class="btn primary" id="findNearStopsBtn" type="button" style="width:100%">📍 내 위치에서 가까운 정류장 찾기</button>
+    <div id="nearStopsResult" style="margin-top:10px"></div>
   </div>
 </section>
 
