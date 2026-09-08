@@ -187,6 +187,20 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 
 <section id="food" class="section">
   <h2 class="title">로컬 맛집</h2><p class="sub">현재는 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인하세요.</p>
+  <div class="card">
+    <b>카카오맵 실시간 검색</b>
+    <p class="small" style="margin:4px 0 10px">카카오맵의 실제 검색결과예요. 별점은 카카오 API가 제공하지 않아 표시하지 않고, 대신 정확도순·거리순으로 정렬해요.</p>
+    <div style="display:flex;gap:6px">
+      <input id="kakaoFoodKeyword" value="제주 맛집" style="flex:1">
+      <button class="btn primary" id="kakaoFoodSearchBtn" type="button">검색</button>
+    </div>
+    <div class="seg-tabs">
+      <button class="seg-tab" id="kakaoSortAccuracy" type="button">정확도순</button>
+      <button class="seg-tab" id="kakaoSortDistance" type="button">📍 내 위치 기준 거리순</button>
+    </div>
+    <div id="kakaoFoodResults" style="margin-top:10px"></div>
+    <button class="btn hidden" id="kakaoFoodMoreBtn" type="button" style="width:100%;margin-top:8px">더보기</button>
+  </div>
   <div id="foodStaticList"></div>
   <h2 class="title" style="margin-top:24px">주변 볼거리</h2><p class="sub">지역별 대표 관광지예요. 방문 전 최신 운영정보를 확인하세요.</p>
   <div id="attractionStaticList"></div>
@@ -262,6 +276,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=8f8f1585908574cb126afeeeeb73af7e&libraries=services&autoload=false"></script>
 <script src="stops.js"></script>
 <script>
 const firebaseConfig = {
@@ -1226,6 +1241,80 @@ document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stri
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
 document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에 저장된 제주 여행 데이터를 모두 초기화할까요?')){profile=Object.assign({},DEFAULT);save();renderAll();toast('초기화했습니다')}};
+
+// ===== 카카오맵 실시간 장소 검색 (정확도순/거리순, 실제 페이지네이션) =====
+let kakaoPlacesService=null;
+let kakaoPagination=null;
+let kakaoSortMode='accuracy'; // 'accuracy' | 'distance'
+let kakaoUserLoc=null; // {lat,lng} 거리순일 때만 사용
+if(window.kakao&&window.kakao.maps){
+ kakao.maps.load(()=>{
+  try{kakaoPlacesService=new kakao.maps.services.Places()}catch(e){}
+ });
+}
+function kakaoRenderResults(data,isFirstPage){
+ const list=document.getElementById('kakaoFoodResults');
+ if(isFirstPage)list.innerHTML='';
+ if(isFirstPage&&(!data||!data.length)){list.innerHTML='<p class="small">검색 결과가 없어요.</p>';return}
+ data.forEach(place=>{
+  const div=document.createElement('div');
+  div.className='course';
+  const distTxt=place.distance?` · ${place.distance}m`:'';
+  div.innerHTML=`<div style="flex:1"><h3>${esc(place.place_name)}</h3><div class="meta">${esc(place.road_address_name||place.address_name||'')}${distTxt}</div>${dirButtonsHtml(parseFloat(place.y),parseFloat(place.x),place.place_name)}</div>`;
+  list.appendChild(div);
+ });
+}
+function kakaoDoSearch(keyword){
+ if(!kakaoPlacesService){toast('카카오맵 연동 준비 중이에요. 잠시 후 다시 시도해주세요.');return}
+ const opts={};
+ if(kakaoSortMode==='distance'&&kakaoUserLoc){
+  opts.location=new kakao.maps.LatLng(kakaoUserLoc.lat,kakaoUserLoc.lng);
+  opts.sort=kakao.maps.services.SortBy.DISTANCE;
+ }
+ document.getElementById('kakaoFoodResults').innerHTML='<p class="small"><span class="spinner"></span>검색 중…</p>';
+ document.getElementById('kakaoFoodMoreBtn').classList.add('hidden');
+ kakaoPlacesService.keywordSearch(keyword,(data,status,pagination)=>{
+  if(status!==kakao.maps.services.Status.OK){
+   document.getElementById('kakaoFoodResults').innerHTML='<p class="small">검색 결과가 없거나 오류가 발생했어요.</p>';
+   return;
+  }
+  kakaoPagination=pagination;
+  kakaoRenderResults(data,pagination.current===1);
+  document.getElementById('kakaoFoodMoreBtn').classList.toggle('hidden',!pagination.hasNextPage);
+ },opts);
+}
+document.getElementById('kakaoFoodSearchBtn').onclick=()=>{
+ const kw=document.getElementById('kakaoFoodKeyword').value.trim();
+ if(!kw){toast('검색어를 입력해주세요');return}
+ kakaoDoSearch(kw);
+};
+document.getElementById('kakaoFoodMoreBtn').onclick=()=>{
+ if(kakaoPagination&&kakaoPagination.hasNextPage)kakaoPagination.nextPage();
+};
+document.getElementById('kakaoSortAccuracy').onclick=()=>{
+ kakaoSortMode='accuracy';
+ document.getElementById('kakaoSortAccuracy').classList.add('active-seg');
+ document.getElementById('kakaoSortDistance').classList.remove('active-seg');
+ const kw=document.getElementById('kakaoFoodKeyword').value.trim();
+ if(kw)kakaoDoSearch(kw);
+};
+document.getElementById('kakaoSortDistance').onclick=()=>{
+ if(!('geolocation' in navigator)){toast('이 브라우저는 위치 확인을 지원하지 않아요');return}
+ const btn=document.getElementById('kakaoSortDistance');
+ btn.disabled=true;btn.textContent='위치 확인 중…';
+ navigator.geolocation.getCurrentPosition(pos=>{
+  btn.disabled=false;btn.textContent='📍 내 위치 기준 거리순';
+  kakaoUserLoc={lat:pos.coords.latitude,lng:pos.coords.longitude};
+  kakaoSortMode='distance';
+  btn.classList.add('active-seg');
+  document.getElementById('kakaoSortAccuracy').classList.remove('active-seg');
+  const kw=document.getElementById('kakaoFoodKeyword').value.trim();
+  if(kw)kakaoDoSearch(kw);
+ },()=>{
+  btn.disabled=false;btn.textContent='📍 내 위치 기준 거리순';
+  toast('위치 권한이 필요해요. 허용 후 다시 눌러주세요.');
+ },{enableHighAccuracy:true,timeout:8000});
+};
 
 })();
 if('serviceWorker' in navigator){
