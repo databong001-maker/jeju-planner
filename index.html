@@ -174,6 +174,16 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <section id="courses" class="section">
   <h2 class="title">올레길 코스</h2><p class="sub">총 26개. 정규 21개 + 부속 5개 · 완주와 여행 계획을 각각 저장합니다.</p>
   <div class="banner">💡 실제 주소·운영 정보는 추후 수정 전제입니다. '지도 링크'는 브라우저에서 바로 동작하도록 외부 지도 URL을 새 창으로 여는 방식입니다.</div>
+  <div class="card">
+    <b>🎯 아직 안 걸은 코스 추천</b>
+    <p class="small" style="margin:4px 0 10px">완주 체크 안 한 코스 중에서 골라드려요.</p>
+    <div class="seg-tabs">
+      <button class="seg-tab" id="recSortEasy" type="button">난이도 쉬운순</button>
+      <button class="seg-tab" id="recSortTime" type="button">소요시간 짧은순</button>
+      <button class="seg-tab" id="recSortNear" type="button">📍 내 위치 기준 가까운순</button>
+    </div>
+    <div id="courseRecList" style="margin-top:10px"></div>
+  </div>
   <div id="courseList"></div>
 </section>
 
@@ -582,8 +592,52 @@ function renderCourses(){
   };
   list.appendChild(el);
  });
+ renderCourseRec(courseRecMode);
 }
-const allFoodItems=localFoodData.flatMap(g=>g.items);
+let courseRecMode='easy';
+function timeToHours(t){
+ const nums=(t.match(/[0-9]+(\.[0-9]+)?/g)||[]).map(Number);
+ if(!nums.length)return 99;
+ return nums.reduce((a,b)=>a+b,0)/nums.length;
+}
+function courseRecHtml(list){
+ if(!list.length)return '<p class="small">축하해요! 모든 코스를 완주하셨어요 🎉</p>';
+ return list.slice(0,5).map(c=>{
+  const extra=c._dist!=null?` · ${c._dist.toFixed(1)}km`:'';
+  return `<div class="course" style="align-items:center">
+   <div class="num" style="cursor:pointer" data-rec-course="${esc(c.n)}">${esc(c.n)}</div>
+   <div style="flex:1;cursor:pointer" data-rec-course="${esc(c.n)}">
+    <h3>${esc(c.name)}</h3>
+    <div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}${extra}</div>
+   </div>
+  </div>`;
+ }).join('');
+}
+function renderCourseRec(mode){
+ const el=document.getElementById('courseRecList');if(!el)return;
+ const undone=courses.filter(c=>!profile.done.includes('course-'+c.n));
+ const list=undone.slice();
+ if(mode==='easy'){
+  const rank={lo:1,mid:2,hi:3};
+  list.sort((a,b)=>rank[a.level]-rank[b.level]);
+ }else if(mode==='time'){
+  list.sort((a,b)=>timeToHours(a.time)-timeToHours(b.time));
+ }else if(mode==='near'&&window.__recUserLoc){
+  list.forEach(c=>c._dist=haversineKm(window.__recUserLoc.lat,window.__recUserLoc.lng,c.start[0],c.start[1]));
+  list.sort((a,b)=>a._dist-b._dist);
+ }
+ el.innerHTML=courseRecHtml(list);
+ el.querySelectorAll('[data-rec-course]').forEach(item=>{
+  item.onclick=()=>openCourseDetail(item.dataset.recCourse);
+ });
+ updateRecTabs();
+}
+function updateRecTabs(){
+ const map={easy:'recSortEasy',time:'recSortTime',near:'recSortNear'};
+ Object.keys(map).forEach(k=>{
+  const b=document.getElementById(map[k]);if(b)b.classList.toggle('active-seg',courseRecMode===k);
+ });
+}
 function getAllFoodItems(){
  const custom=(profile.customPlaces||[]).filter(p=>p.category==='food'&&p.lat!=null&&p.lng!=null).map(p=>({name:p.name,desc:'내가 추가한 맛집',lat:p.lat,lng:p.lng}));
  return allFoodItems.concat(custom);
@@ -1085,6 +1139,21 @@ document.getElementById('autoScheduleBtn').onclick=autoSchedule;
 document.getElementById('clearScheduleBtn').onclick=()=>{profile.schedule={};save();renderSchedule();toast('일정을 비웠습니다')};
 document.getElementById('notesArea').oninput=e=>{document.getElementById('saveStatus').textContent='저장 중…';clearTimeout(window.__note);window.__note=setTimeout(()=>{profile.notes=e.target.value;save();document.getElementById('saveStatus').textContent='저장됨'},350)};
 document.getElementById('goHomeAddStay').onclick=()=>{showTab('home');document.getElementById('staysCard').scrollIntoView({behavior:'smooth',block:'center'})};
+document.getElementById('recSortEasy').onclick=()=>{courseRecMode='easy';renderCourseRec('easy')};
+document.getElementById('recSortTime').onclick=()=>{courseRecMode='time';renderCourseRec('time')};
+document.getElementById('recSortNear').onclick=()=>{
+ if(!('geolocation' in navigator)){toast('이 브라우저는 위치 확인을 지원하지 않아요');return}
+ const btn=document.getElementById('recSortNear');
+ btn.disabled=true;btn.textContent='위치 확인 중…';
+ navigator.geolocation.getCurrentPosition(pos=>{
+  btn.disabled=false;btn.textContent='📍 내 위치 기준 가까운순';
+  window.__recUserLoc={lat:pos.coords.latitude,lng:pos.coords.longitude};
+  courseRecMode='near';renderCourseRec('near');
+ },()=>{
+  btn.disabled=false;btn.textContent='📍 내 위치 기준 가까운순';
+  toast('위치 권한이 필요해요.');
+ },{enableHighAccuracy:true,timeout:8000});
+};
 document.getElementById('findNearStopsBtn').onclick=()=>{
  const btn=document.getElementById('findNearStopsBtn'),result=document.getElementById('nearStopsResult');
  if(!('geolocation' in navigator)){
