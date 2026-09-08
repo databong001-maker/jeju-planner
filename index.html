@@ -119,8 +119,8 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     </div>
   </div>
   <div class="grid2">
-    <div class="stat"><span>다녀온 코스</span><b id="statDone">0</b><span>총 26개</span></div>
-    <div class="stat"><span>이번 여행 코스</span><b id="statPlan">0</b><span>내 일정에 배정</span></div>
+    <div class="stat"><span>다녀온 코스</span><b id="statDone">0/26</b></div>
+    <div class="stat"><span>이번 여행 코스</span><b id="statPlan">0/26</b></div>
   </div>
   <div class="card"><b>올레길 진행률</b><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
   <div class="card" id="periodCard">
@@ -689,7 +689,7 @@ document.getElementById('courseDetailBack').onclick=()=>{history.back()};
 function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
  const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
- document.getElementById('statDone').textContent=done;document.getElementById('statPlan').textContent=plan;
+ document.getElementById('statDone').textContent=done+'/26';document.getElementById('statPlan').textContent=plan+'/26';
  document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressText').textContent=p+'% 완주 · '+done+'/'+courses.length;
  document.getElementById('departureDate').value=profile.departure;
  const pref={olle:'🥾 올레길 위주 스타일 — 걷는 날을 중심으로 코스를 골라보세요.',food:'🍽 맛집 위주 스타일 — 맛집과 코스를 함께 묶어보세요.',relax:'☕ 여유롭게 스타일 — 난이도 하 코스와 휴식일을 섞어보세요.'};
