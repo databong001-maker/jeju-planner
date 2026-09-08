@@ -277,6 +277,15 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <h2 class="title">나의 메모</h2><p class="sub">입력 후 잠시 기다리면 자동 저장됩니다.</p>
   <textarea id="notesArea" placeholder="예: 5/3 애월 도착, 15시 체크인&#10;5/4 올레 16코스, 점심 예약 확인"></textarea>
   <p class="small" id="saveStatus">이 브라우저에 자동 저장됩니다.</p>
+
+  <h2 class="title" style="margin-top:24px">태그 메모</h2>
+  <p class="sub">짧은 메모에 #맛집, #이동 같은 태그를 붙이면 나중에 태그별로 모아볼 수 있어요.</p>
+  <div class="card">
+    <input id="tagNoteInput" placeholder="예: #맛집 우진해장국 물회 맛있음">
+    <button class="btn primary" id="addTagNoteBtn" type="button" style="width:100%;margin-top:8px">메모 추가</button>
+    <div id="tagFilterRow" style="margin-top:10px"></div>
+    <div id="tagNoteList" style="margin-top:10px"></div>
+  </div>
 </section>
 </main>
 </div>
@@ -314,11 +323,11 @@ try{
 (function(){
 'use strict';
 const KEY='jeju3weeks.v3';
-const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,stays:[],customPlaces:[],schedule:{}};
+const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,stays:[],customPlaces:[],noteEntries:[],schedule:{}};
 let profile=Object.assign({},DEFAULT);
 let currentUser=null;
 
-function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],stays:Array.isArray(x.stays)?x.stays:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
+function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],stays:Array.isArray(x.stays)?x.stays:[],noteEntries:Array.isArray(x.noteEntries)?x.noteEntries:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
 function withTimeout(promise,ms){
   return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]);
 }
@@ -1120,7 +1129,31 @@ function renderPeriod(){
  document.getElementById('periodSummary').textContent=`${fmt(sd)} ~ ${fmt(ed)} · 총 ${profile.days}일 (${weeks}주차까지)`;
  updateScheduleLabels();
 }
-function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();document.getElementById('notesArea').value=profile.notes||''}
+function extractTags(text){return (text.match(/#[^\s#]+/g)||[])}
+function renderTagNotes(){
+ const listEl=document.getElementById('tagNoteList');
+ const filterEl=document.getElementById('tagFilterRow');
+ if(!listEl||!filterEl)return;
+ const entries=(profile.noteEntries||[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+ const allTags=[...new Set(entries.flatMap(e=>extractTags(e.text)))];
+ const activeTag=window.__activeTag||null;
+ filterEl.innerHTML=allTags.length?allTags.map(t=>`<button class="btn nearby-course-chip" type="button" data-tag="${esc(t)}" style="padding:4px 8px;font-size:10px;margin:2px 4px 4px 0${activeTag===t?';background:var(--blue);border-color:var(--blue);color:#fff':''}">${esc(t)}</button>`).join('')+(activeTag?`<button class="btn" type="button" id="clearTagFilter" style="padding:4px 8px;font-size:10px">전체보기</button>`:''):'<p class="small">태그가 아직 없어요. #맛집 처럼 메모에 붙여보세요.</p>';
+ filterEl.querySelectorAll('[data-tag]').forEach(b=>b.onclick=()=>{window.__activeTag=(window.__activeTag===b.dataset.tag)?null:b.dataset.tag;renderTagNotes()});
+ const clearBtn=document.getElementById('clearTagFilter');if(clearBtn)clearBtn.onclick=()=>{window.__activeTag=null;renderTagNotes()};
+ const shown=activeTag?entries.filter(e=>extractTags(e.text).includes(activeTag)):entries;
+ if(!shown.length){listEl.innerHTML='<p class="small">메모가 없어요.</p>';return}
+ listEl.innerHTML=shown.map(e=>{
+  const html=esc(e.text).replace(/#[^\s#]+/g,m=>`<span style="color:var(--blue);font-weight:700">${m}</span>`);
+  const d=new Date(e.createdAt);
+  const dateStr=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  return `<div class="day-course" style="flex-wrap:wrap"><span style="flex:1 1 100%">${html}</span><span class="small" style="flex:1 1 100%">${dateStr}</span><button class="btn danger" data-del-note="${e.id}" style="margin-top:6px">삭제</button></div>`;
+ }).join('');
+ listEl.querySelectorAll('[data-del-note]').forEach(b=>b.onclick=()=>{
+  profile.noteEntries=(profile.noteEntries||[]).filter(e=>e.id!==b.dataset.delNote);
+  save();renderTagNotes();
+ });
+}
+function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||''}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -1139,6 +1172,15 @@ document.getElementById('autoScheduleBtn').onclick=autoSchedule;
 document.getElementById('clearScheduleBtn').onclick=()=>{profile.schedule={};save();renderSchedule();toast('일정을 비웠습니다')};
 document.getElementById('notesArea').oninput=e=>{document.getElementById('saveStatus').textContent='저장 중…';clearTimeout(window.__note);window.__note=setTimeout(()=>{profile.notes=e.target.value;save();document.getElementById('saveStatus').textContent='저장됨'},350)};
 document.getElementById('goHomeAddStay').onclick=()=>{showTab('home');document.getElementById('staysCard').scrollIntoView({behavior:'smooth',block:'center'})};
+document.getElementById('addTagNoteBtn').onclick=()=>{
+ const input=document.getElementById('tagNoteInput');
+ const text=input.value.trim();
+ if(!text){toast('메모 내용을 입력해주세요');return}
+ profile.noteEntries=profile.noteEntries||[];
+ profile.noteEntries.push({id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text,createdAt:Date.now()});
+ input.value='';
+ save();renderTagNotes();
+};
 document.getElementById('recSortEasy').onclick=()=>{courseRecMode='easy';renderCourseRec('easy')};
 document.getElementById('recSortTime').onclick=()=>{courseRecMode='time';renderCourseRec('time')};
 document.getElementById('recSortNear').onclick=()=>{
@@ -1308,7 +1350,7 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
 };
 document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jeju-3weeks-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일을 만들었습니다')};
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
-document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
+document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.noteEntries=Array.isArray(profile.noteEntries)?profile.noteEntries:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
 document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에 저장된 제주 여행 데이터를 모두 초기화할까요?')){profile=Object.assign({},DEFAULT);save();renderAll();toast('초기화했습니다')}};
 
 // ===== 카카오맵 실시간 장소 검색 (정확도순/거리순, 실제 페이지네이션) =====
