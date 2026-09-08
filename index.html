@@ -119,8 +119,8 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     </div>
   </div>
   <div class="grid2">
-    <div class="stat"><span>완주 코스</span><b id="statDone">0</b><span>총 26개</span></div>
-    <div class="stat"><span>이번 여행 계획</span><b id="statPlan">0</b><span>내 일정에 배정</span></div>
+    <div class="stat"><span>다녀온 코스</span><b id="statDone">0</b><span>총 26개</span></div>
+    <div class="stat"><span>이번 여행 코스</span><b id="statPlan">0</b><span>내 일정에 배정</span></div>
   </div>
   <div class="card"><b>올레길 진행률</b><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
   <div class="card" id="periodCard">
@@ -138,29 +138,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <p class="small" id="periodSummary" style="margin:8px 0 0"></p>
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="todayBtn">오늘을 시작일로</button><button class="btn" id="sampleBtn">샘플 일정 만들기</button></div>
   </div>
-  <div class="card" id="staysCard">
-    <b>숙소</b><p class="small" style="margin:4px 0 10px">머무는 숙소를 기간별로 등록해두면 일정에 자동 반영돼요.</p>
-    <div id="staysList"></div>
-    <button class="btn primary" id="addStayBtn" type="button" style="width:100%;margin-top:6px">+ 숙소 추가</button>
-    <div id="stayForm" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
-      <label>숙소 이름</label>
-      <input id="stayName" placeholder="예: 숙소1">
-      <div class="grid2">
-        <div><label>체크인</label><input type="date" id="stayCheckin"></div>
-        <div><label>체크아웃</label><input type="date" id="stayCheckout"></div>
-      </div>
-      <label>주소, 숙소 이름, 또는 구글맵 링크</label>
-      <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
-      <button class="btn green" id="stayMapSearchBtn" type="button" style="width:100%;margin:9px 0">🔍 구글맵에서 검색</button>
-      <p class="small">위 버튼을 누르면 입력한 이름/주소로 구글맵 검색이 새 탭에서 열려요. 원하는 장소를 찾으면 <b>공유 → 링크 복사</b> 후 이 입력창에 붙여넣어주세요. 주소나 이름을 그냥 적어도 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
-      <input type="hidden" id="stayEditId">
-      <div class="actions" style="margin-top:8px">
-        <button class="btn" id="cancelStayBtn" type="button">취소</button>
-        <button class="btn primary" id="saveStayBtn" type="button">저장</button>
-      </div>
-    </div>
-  </div>
-  <div class="card"><b>빠른 안내</b><p class="small">① 위에서 제주살이 기간을 정해요 → ② 숙소를 등록해요 → ③ 올레길에서 '이번 여행 계획'을 선택 → ④ 일정 탭에서 주차를 눌러 펼치고 날짜별 코스를 배정 → ⑤ 지도에서 전체 흐름 확인 → ⑥ 메모 저장</p></div>
+  <div class="card"><b style="font-size:18px">빠른 안내</b><p class="small">① 위에서 제주살이 기간을 정해요 → ② 숙소를 등록해요 → ③ 올레길에서 '이번 여행에 추가'를 선택 → ④ 일정 탭에서 주차를 눌러 펼치고 날짜별 코스를 배정 → ⑤ 지도에서 전체 흐름 확인 → ⑥ 메모 저장</p></div>
   <div class="actions"><button class="btn" id="exportBtn">백업 내보내기</button><button class="btn" id="importBtn">백업 불러오기</button><button class="btn danger" id="resetBtn">전체 초기화</button><input id="importFile" type="file" accept=".json" class="hidden"></div>
 </section>
 
@@ -260,11 +238,27 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 
 <section id="transit" class="section">
   <h2 class="title">베이스</h2><p class="sub">숙소와 이동(정류장)을 한 곳에서 확인해요.</p>
-  <div class="card">
-    <b>숙소</b>
-    <p class="small" style="margin:4px 0 10px">등록한 숙소 목록이에요. 추가·수정·삭제는 홈 화면 '숙소' 카드에서 할 수 있어요.</p>
-    <div id="stayTabList"></div>
-    <div class="actions" style="margin-top:10px"><button class="btn primary" id="goHomeAddStay" type="button">홈에서 숙소 추가/수정</button></div>
+  <div class="card" id="staysCard">
+    <b>숙소</b><p class="small" style="margin:4px 0 10px">머무는 숙소를 기간별로 등록해두면 일정에 자동 반영돼요.</p>
+    <div id="staysList"></div>
+    <button class="btn primary" id="addStayBtn" type="button" style="width:100%;margin-top:6px">+ 숙소 추가</button>
+    <div id="stayForm" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+      <label>숙소 이름</label>
+      <input id="stayName" placeholder="예: 숙소1">
+      <div class="grid2">
+        <div><label>체크인</label><input type="date" id="stayCheckin"></div>
+        <div><label>체크아웃</label><input type="date" id="stayCheckout"></div>
+      </div>
+      <label>주소, 숙소 이름, 또는 구글맵 링크</label>
+      <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
+      <button class="btn green" id="stayMapSearchBtn" type="button" style="width:100%;margin:9px 0">🔍 구글맵에서 검색</button>
+      <p class="small">위 버튼을 누르면 입력한 이름/주소로 구글맵 검색이 새 탭에서 열려요. 원하는 장소를 찾으면 <b>공유 → 링크 복사</b> 후 이 입력창에 붙여넣어주세요. 주소나 이름을 그냥 적어도 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
+      <input type="hidden" id="stayEditId">
+      <div class="actions" style="margin-top:8px">
+        <button class="btn" id="cancelStayBtn" type="button">취소</button>
+        <button class="btn primary" id="saveStayBtn" type="button">저장</button>
+      </div>
+    </div>
   </div>
   <div class="card">
     <b>내 주변 정류장</b>
@@ -573,7 +567,7 @@ function renderCourses(){
   const id='course-'+c.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
   const el=document.createElement('div');el.className='course'+(done?' done':'')+(planned?' planned':'');el.id=id;
   const mapUrl=`https://www.google.com/maps/dir/?api=1&origin=${c.start.join(',')}&destination=${c.end.join(',')}&travelmode=walking`;
-  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button><button class="btn check">${done?'✓ 완주함':'완주 체크'}</button></div>
+  el.innerHTML=`<div class="num">${esc(c.n)}</div><div style="flex:1"><h3>${esc(c.name)}</h3><div class="meta"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div><p class="desc">${esc(c.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button><button class="btn check">${done?'✓ 다녀옴':'다녀옴 체크'}</button></div>
    <div class="seg-tabs"><button type="button" class="seg-tab map-tab">🌏 지도</button><button type="button" class="seg-tab stops-tab">🚏 주변 정류장</button></div>
    <div class="seg-panel hidden map-panel"><a class="btn" href="${mapUrl}" target="_blank" rel="noopener" style="padding:4px 8px;font-size:10px">시작점→종점 도보 경로 열기</a></div>
    <div class="seg-panel hidden stops-panel"></div>
@@ -669,8 +663,8 @@ function openCourseDetail(n){
   <div class="meta" style="margin:6px 0"><span class="badge ${c.level}">난이도 ${level[c.level]}</span>${c.dist} · ${c.time}</div>
   <p class="desc">${esc(c.desc)}</p>
   <div class="actions">
-   <button class="btn blue" id="detailPlanBtn" type="button">${planned?'✓ 여행 계획됨':'🗺 이번 여행 계획'}</button>
-   <button class="btn" id="detailCheckBtn" type="button">${done?'✓ 완주함':'완주 체크'}</button>
+   <button class="btn blue" id="detailPlanBtn" type="button">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button>
+   <button class="btn" id="detailCheckBtn" type="button">${done?'✓ 다녀옴':'다녀옴 체크'}</button>
    <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
   </div>
   <h3>🏞 코스 주변 볼거리</h3>
@@ -1172,7 +1166,6 @@ document.getElementById('customDays').onchange=e=>{
 document.getElementById('autoScheduleBtn').onclick=autoSchedule;
 document.getElementById('clearScheduleBtn').onclick=()=>{profile.schedule={};save();renderSchedule();toast('일정을 비웠습니다')};
 document.getElementById('notesArea').oninput=e=>{document.getElementById('saveStatus').textContent='저장 중…';clearTimeout(window.__note);window.__note=setTimeout(()=>{profile.notes=e.target.value;save();document.getElementById('saveStatus').textContent='저장됨'},350)};
-document.getElementById('goHomeAddStay').onclick=()=>{showTab('home');document.getElementById('staysCard').scrollIntoView({behavior:'smooth',block:'center'})};
 function nearestNeighborOrder(points){
  if(points.length<=1)return points.slice();
  const remaining=points.slice();
