@@ -286,6 +286,10 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <textarea id="notesArea" placeholder="예: 5/3 애월 도착, 15시 체크인&#10;5/4 올레 16코스, 점심 예약 확인"></textarea>
   <p class="small" id="saveStatus">이 브라우저에 자동 저장됩니다.</p>
 
+  <h2 class="title" style="margin-top:24px">하루 일기</h2>
+  <p class="sub">숙소·코스는 일정에서 자동으로 가져와요. 한 줄 소감과 구글포토 링크만 남겨보세요. (나중에 앨범 기능에서 모아볼 예정이에요)</p>
+  <div id="diaryList"></div>
+
   <h2 class="title" style="margin-top:24px">태그 메모</h2>
   <p class="sub">짧은 메모에 #맛집, #이동 같은 태그를 붙이면 나중에 태그별로 모아볼 수 있어요.</p>
   <div class="card">
@@ -331,11 +335,11 @@ try{
 (function(){
 'use strict';
 const KEY='jeju3weeks.v3';
-const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,stays:[],customPlaces:[],noteEntries:[],schedule:{}};
+const DEFAULT={departure:'2027-05-01',days:21,pref:'olle',done:[],plan:[],notes:'',stay:null,stays:[],customPlaces:[],noteEntries:[],schedule:{},diary:{}};
 let profile=Object.assign({},DEFAULT);
 let currentUser=null;
 
-function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],stays:Array.isArray(x.stays)?x.stays:[],noteEntries:Array.isArray(x.noteEntries)?x.noteEntries:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{}})}
+function normalize(x){return Object.assign({},DEFAULT,x,{days:(typeof x.days==='number'&&x.days>0)?Math.min(90,Math.round(x.days)):DEFAULT.days,done:Array.isArray(x.done)?x.done:[],plan:Array.isArray(x.plan)?x.plan:[],customPlaces:Array.isArray(x.customPlaces)?x.customPlaces:[],stays:Array.isArray(x.stays)?x.stays:[],noteEntries:Array.isArray(x.noteEntries)?x.noteEntries:[],schedule:x.schedule&&typeof x.schedule==='object'?x.schedule:{},diary:x.diary&&typeof x.diary==='object'?x.diary:{}})}
 function withTimeout(promise,ms){
   return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]);
 }
@@ -1212,6 +1216,34 @@ function renderPeriod(){
  updateScheduleLabels();
 }
 function extractTags(text){return (text.match(/#[^\s#]+/g)||[])}
+function renderDiary(){
+ const wrap=document.getElementById('diaryList');if(!wrap)return;
+ const days=profile.days||21;
+ let html='';
+ for(let i=1;i<=days;i++){
+  const dateStr=dateStrForDay(i);
+  const dt=new Date(dateStr+'T00:00:00'),ds=`${dt.getMonth()+1}/${dt.getDate()}`;
+  const stay=stayForDate(dateStr);
+  const sched=profile.schedule[i];
+  const courseName=sched&&sched.type==='olle'&&sched.course?(courses.find(c=>c.n===sched.course)||{}).name:'';
+  const autoBits=[stay?`🏠 ${esc(stay.name)}`:'',courseName?`🥾 올레 ${esc(sched.course)} · ${esc(courseName)}`:''].filter(Boolean).join(' · ')||'일정 없음';
+  const entry=profile.diary[i]||{mood:'',photoLink:''};
+  html+=`<div class="schedule-day"><div class="day-head"><strong>DAY ${i} · ${ds}</strong><span class="small">${autoBits}</span></div>
+   <div class="day-body">
+    <input class="diary-mood" data-day="${i}" placeholder="오늘 한 줄 (예: 협재 노을 진짜 예뻤다)" value="${esc(entry.mood||'')}">
+    <div class="day-row"><input class="diary-link" data-day="${i}" placeholder="구글포토 공유 링크 (선택)" value="${esc(entry.photoLink||'')}"><button class="btn diary-save" data-day="${i}">저장</button></div>
+    ${entry.photoLink?`<a href="${esc(entry.photoLink)}" target="_blank" rel="noopener" class="small" style="display:block;margin-top:6px;color:var(--sea)">📷 사진 보러가기</a>`:''}
+   </div></div>`;
+ }
+ wrap.innerHTML=html;
+ wrap.querySelectorAll('.diary-save').forEach(b=>b.onclick=()=>{
+  const i=b.dataset.day;
+  const mood=wrap.querySelector(`.diary-mood[data-day="${i}"]`).value;
+  const link=wrap.querySelector(`.diary-link[data-day="${i}"]`).value;
+  profile.diary[i]={mood,photoLink:link};
+  save();renderDiary();toast('DAY '+i+' 일기 저장됨');
+ });
+}
 function renderTagNotes(){
  const listEl=document.getElementById('tagNoteList');
  const filterEl=document.getElementById('tagFilterRow');
@@ -1235,7 +1267,7 @@ function renderTagNotes(){
   save();renderTagNotes();
  });
 }
-function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
+function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();renderDiary();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -1462,7 +1494,7 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
 };
 document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jeju-3weeks-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일을 만들었습니다')};
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
-document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.noteEntries=Array.isArray(profile.noteEntries)?profile.noteEntries:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
+document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);profile=Object.assign({},DEFAULT,x);profile.done=Array.isArray(profile.done)?profile.done:[];profile.plan=Array.isArray(profile.plan)?profile.plan:[];profile.customPlaces=Array.isArray(profile.customPlaces)?profile.customPlaces:[];profile.stays=Array.isArray(profile.stays)?profile.stays:[];profile.noteEntries=Array.isArray(profile.noteEntries)?profile.noteEntries:[];profile.schedule=profile.schedule&&typeof profile.schedule==='object'?profile.schedule:{};profile.diary=profile.diary&&typeof profile.diary==='object'?profile.diary:{};save();renderAll();toast('백업을 복원했습니다')}catch(_){toast('올바른 백업 파일이 아닙니다')}};r.readAsText(f)};
 document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에 저장된 제주 여행 데이터를 모두 초기화할까요?')){profile=Object.assign({},DEFAULT);save();renderAll();toast('초기화했습니다')}};
 
 // ===== 카카오맵 실시간 장소 검색 (정확도순/거리순, 실제 페이지네이션) =====
