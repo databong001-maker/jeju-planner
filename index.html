@@ -15,11 +15,14 @@
 <style>
 :root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--stone);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;line-height:1.5}.app{max-width:760px;margin:auto;padding-bottom:80px}
-header{background:var(--ink);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}
+header{background:linear-gradient(160deg,#26221C 0%,#302A20 55%,#3B3225 100%);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}header .oreum{position:absolute;left:0;bottom:0;width:100%;height:46px;pointer-events:none}
 .eyebrow{margin:0 0 5px;color:var(--orange);font-size:12px;font-weight:800;letter-spacing:.08em}.hero{display:flex;justify-content:space-between;gap:14px;align-items:end}.hero h1{font-family:Georgia,serif;font-size:30px;line-height:1.1;margin:0 0 8px}.hero p{margin:0;color:#eee9dc;font-size:13px}.stamp{min-width:64px;height:64px;border:2px solid var(--orange);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-5deg);z-index:1}.stamp b{font:700 17px Georgia;color:var(--orange);line-height:1}.stamp span{font-size:9px;margin-top:3px}
 nav{display:flex;overflow:auto;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}nav button{flex:0 0 auto;min-width:75px;border:0;background:transparent;padding:13px 9px;color:#88806e;font-weight:750;font-size:12px;border-bottom:2px solid transparent}nav button.active{color:var(--ink);border-bottom-color:var(--orange)}
 main{padding:18px}.section{display:none}.section.active{display:block}.title{font:600 21px Georgia,serif;margin:2px 0 3px}.sub{font-size:12px;color:var(--muted);margin:0 0 15px}
 .card{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:15px;margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.stat-card{text-align:center;display:flex;flex-direction:column;align-items:center}.stat-card .small{margin-top:2px}
+#todayCard{display:flex;align-items:center;gap:12px}#todayCard .today-emoji{font-size:26px}#todayCard .today-title{font-weight:700;font-size:14px}#todayCard .today-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.shortcut-btn{flex:1}
 .stat{padding:12px;border:1px solid var(--line);background:var(--white);border-radius:7px}.stat b{display:block;font-size:22px}.stat span{font-size:11px;color:var(--muted)}
 .progress{height:8px;background:var(--stone2);border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--sea);width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:8px 11px;border-radius:20px;font-weight:750;font-size:12px;cursor:pointer}.btn.primary{background:var(--orange);border-color:var(--orange);color:white}.btn.blue{background:var(--blue);border-color:var(--blue);color:white}.btn.green{background:var(--sea);border-color:var(--sea);color:white}.btn.danger{color:var(--red)}
 .seg-tabs{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}.seg-tab{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:5px 9px;border-radius:14px;font-weight:750;font-size:11px;cursor:pointer}.seg-tab.active-seg{background:var(--ink);border-color:var(--ink);color:#fff}.seg-panel{margin-top:8px}
@@ -94,6 +97,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <div><h1>제주살이 플래너</h1><p id="ddayText">시작일을 설정해보세요</p></div>
     <div class="stamp"><b id="ddayNum">D-?</b><span id="monthLabel">2027.05</span></div>
   </div>
+  <svg class="oreum" viewBox="0 0 400 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,46 L0,34 Q40,14 80,30 T170,26 Q210,10 250,28 T340,22 Q370,12 400,24 L400,46 Z" fill="#00000030"/></svg>
 </header>
 <nav id="tabs">
   <button class="active" data-tab="home">홈</button>
@@ -109,6 +113,15 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <section id="home" class="section active">
   <h2 class="title">이번 제주, 이렇게 시작해요</h2><p class="sub">로그인한 계정에 저장되어 다른 기기에서도 이어서 볼 수 있어요. 백업 파일로도 내보낼 수 있어요.</p>
   <div class="banner" id="prefBanner"></div>
+  <div class="card" id="todayCard"></div>
+  <div class="grid2">
+    <div class="card stat-card"><b id="statDone" style="font-size:20px;color:var(--sea)">0/0</b><span class="small">완주 코스</span><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
+    <div class="card stat-card"><b id="statPlan" style="font-size:20px;color:var(--orange)">0</b><span class="small">이번 여행 계획 코스</span></div>
+  </div>
+  <div class="actions" style="margin:12px 0">
+    <button class="btn shortcut-btn" data-goto="courses">🥾 올레길 추천</button>
+    <button class="btn shortcut-btn" data-goto="food">🍽 주변 맛집</button>
+  </div>
   <div class="card">
     <b>여행 스타일</b>
     <p class="small" style="margin:4px 0 8px">홈 배너와 추천 문구에 반영돼요</p>
@@ -118,7 +131,6 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
       <button class="btn pref-btn" data-pref="relax">☕ 여유롭게</button>
     </div>
   </div>
-  <div class="card"><b>올레길 진행률</b><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
   <div class="card" id="periodCard">
     <b>제주살이 기간</b>
     <label for="departureDate">시작일</label><input type="date" id="departureDate">
@@ -686,11 +698,34 @@ function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
  const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
  document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressText').textContent=p+'% 완주 · '+done+'/'+courses.length;
+ document.getElementById('statDone').textContent=done+'/'+courses.length;
+ document.getElementById('statPlan').textContent=plan+'개';
  document.getElementById('departureDate').value=profile.departure;
  const pref={olle:'🥾 올레길 위주 스타일 — 걷는 날을 중심으로 코스를 골라보세요.',food:'🍽 맛집 위주 스타일 — 맛집과 코스를 함께 묶어보세요.',relax:'☕ 여유롭게 스타일 — 난이도 하 코스와 휴식일을 섞어보세요.'};
  document.getElementById('prefBanner').textContent=pref[profile.pref]||pref.olle;
  document.querySelectorAll('.pref-btn').forEach(b=>b.classList.toggle('active',b.dataset.pref===profile.pref));
+ renderTodayCard();
 }
+function renderTodayCard(){
+ const el=document.getElementById('todayCard');if(!el)return;
+ const days=profile.days||21;
+ const dep=new Date(profile.departure+'T00:00:00'),today=new Date();today.setHours(0,0,0,0);
+ const idx=Math.round((today-dep)/86400000)+1;
+ const typeInfo={rest:['☕','휴식 / 자유일'],olle:['🥾','올레길'],move:['🚍','이동 / 숙소 변경'],food:['🍽','맛집 / 관광']};
+ if(idx<1){
+  el.innerHTML=`<span class="today-emoji">🧳</span><div><div class="today-title">아직 제주살이 시작 전이에요</div><div class="today-sub">${esc(document.getElementById('ddayText').textContent)}</div></div>`;
+ }else if(idx>days){
+  el.innerHTML=`<span class="today-emoji">🌴</span><div><div class="today-title">제주살이를 마쳤어요</div><div class="today-sub">추억 앨범과 메모를 둘러보세요</div></div>`;
+ }else{
+  const item=profile.schedule[idx]||{type:'rest',course:'',note:''};
+  const info=typeInfo[item.type]||typeInfo.rest;
+  const stay=stayForDate(dateStrForDay(idx));
+  const courseName=item.course?(courses.find(c=>c.n===item.course)||{}).name:'';
+  const sub=[item.type==='olle'&&courseName?`올레 ${esc(item.course)} · ${esc(courseName)}`:'',stay?`🏠 ${esc(stay.name)}`:'',item.note?esc(item.note):''].filter(Boolean).join(' · ')||'일정 없음 · 자유일';
+  el.innerHTML=`<span class="today-emoji">${info[0]}</span><div><div class="today-title">DAY ${idx} · ${info[1]}</div><div class="today-sub">${sub}</div></div>`;
+ }
+}
+document.querySelectorAll('.shortcut-btn').forEach(b=>b.onclick=()=>showTab(b.dataset.goto));
 function renderDday(){
  const t=new Date(profile.departure+'T00:00:00'),d=Math.ceil((t-new Date())/86400000);
  document.getElementById('ddayNum').textContent=d>0?'D-'+d:d===0?'D-DAY':'D+'+Math.abs(d);
@@ -1143,7 +1178,7 @@ function renderTagNotes(){
   save();renderTagNotes();
  });
 }
-function renderAll(){renderPeriod();renderHome();renderDday();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||''}
+function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||''}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
