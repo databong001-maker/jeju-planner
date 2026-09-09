@@ -16,6 +16,8 @@
 :root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--stone);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;line-height:1.5}.app{max-width:760px;margin:auto;padding-bottom:80px}
 header{background:linear-gradient(160deg,#26221C 0%,#302A20 55%,#3B3225 100%);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}header .oreum{position:absolute;left:0;bottom:0;width:100%;height:46px;pointer-events:none}
+.weather-pill{align-items:center;gap:6px;background:#ffffff17;border:1px solid #ffffff2c;border-radius:999px;padding:4px 11px;font-size:12px;color:#F4F0E6;white-space:nowrap}
+.weather-pill svg{width:16px;height:16px;vertical-align:-3px;color:var(--orange)}
 .eyebrow{margin:0 0 5px;color:var(--orange);font-size:12px;font-weight:800;letter-spacing:.08em}.hero{display:flex;justify-content:space-between;gap:14px;align-items:end}.hero h1{font-family:Georgia,serif;font-size:30px;line-height:1.1;margin:0 0 8px}.hero p{margin:0;color:#eee9dc;font-size:13px}.stamp{min-width:64px;height:64px;border:2px solid var(--orange);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-5deg);z-index:1}.stamp b{font:700 17px Georgia;color:var(--orange);line-height:1}.stamp span{font-size:9px;margin-top:3px}
 nav{display:flex;overflow:auto;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}nav button{flex:0 0 auto;min-width:75px;border:0;background:transparent;padding:13px 9px;color:#88806e;font-weight:750;font-size:12px;border-bottom:2px solid transparent}nav button.active{color:var(--ink);border-bottom-color:var(--orange)}
 main{padding:18px}.section{display:none}.section.active{display:block}.title{font:600 21px Georgia,serif;margin:2px 0 3px}.sub{font-size:12px;color:var(--muted);margin:0 0 15px}
@@ -92,7 +94,10 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <div class="app hidden" id="appRoot">
 <div id="userBar"><span id="userEmailLabel"></span><button class="btn" id="logoutBtn" type="button" style="padding:4px 9px;font-size:11px">로그아웃</button></div>
 <header>
-  <p class="eyebrow">JEJU · STAY PLANNER</p>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <p class="eyebrow" style="margin:0">JEJU · STAY PLANNER</p>
+    <div class="weather-pill" id="weatherPill" style="display:none"></div>
+  </div>
   <div class="hero">
     <div><h1>제주살이 플래너</h1><p id="ddayText">시작일을 설정해보세요</p></div>
     <div class="stamp"><b id="ddayNum">D-?</b><span id="monthLabel">2027.05</span></div>
@@ -836,6 +841,57 @@ const BUS_API_SERVICE_KEY='d1bd261aa28015904b06b3b1ff9d3966f95991cc3f9c900203ed8
 const BUS_ARRIVAL_API_URL='https://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList';
 const BUS_STTN_API_URL='https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCrdntPrxmtSttnList'; // 좌표기준 근접 정류소 조회 (nodeId·citycode를 여기서 얻음)
 
+// ===== 날씨 위젯 설정 =====
+// openweathermap.org 무료 가입 후 발급받은 API 키를 아래 따옴표 안에 붙여넣으세요.
+const WEATHER_API_KEY=''; // 예: '1234abcd5678efgh...'
+let weatherCache=null; // {ts,lat,lng,data} 30분 캐시
+function weatherIconSvg(id){
+ const attrs='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+ if(id>=200&&id<300) return `<svg ${attrs}><path d="M7 13h9a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 5 3.5 3.5 0 0 0 7 13Z"/><path d="M13 13l-3 5h3l-2 4"/></svg>`;
+ if(id>=300&&id<600) return `<svg ${attrs}><path d="M7 15h9a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 7 3.5 3.5 0 0 0 7 15Z"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/></svg>`;
+ if(id>=600&&id<700) return `<svg ${attrs}><path d="M7 14h9a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 6 3.5 3.5 0 0 0 7 14Z"/><path d="M9 18v4M7 19l4 2M11 19l-4 2M16 18v4M14 19l4 2M18 19l-4 2"/></svg>`;
+ if(id>=700&&id<800) return `<svg ${attrs} stroke-width="1.6"><path d="M4 8h16M6 12h12M4 16h16M8 20h8"/></svg>`;
+ if(id===800) return `<svg ${attrs}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>`;
+ return `<svg ${attrs}><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.5 4 4 0 0 0 7 18Z"/></svg>`;
+}
+function renderWeatherPill(data){
+ const pill=document.getElementById('weatherPill');if(!pill)return;
+ const temp=Math.round(data.main.temp),desc=data.weather[0].description,id=data.weather[0].id;
+ pill.style.display='inline-flex';
+ pill.innerHTML=`${weatherIconSvg(id)}<span>${esc(desc)} · ${temp}°C</span>`;
+}
+function getGpsCoords(){
+ return new Promise((resolve)=>{
+  if(!navigator.geolocation){resolve(null);return}
+  navigator.geolocation.getCurrentPosition(
+   pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+   ()=>resolve(null),
+   {timeout:5000,maximumAge:15*60*1000}
+  );
+ });
+}
+async function renderWeather(){
+ const pill=document.getElementById('weatherPill');if(!pill)return;
+ if(!WEATHER_API_KEY){pill.style.display='none';return}
+ let coords=await getGpsCoords();
+ if(!coords){
+  const d=new Date(),todayStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const stay=stayForDate(todayStr)||((profile.stays||[])[0]);
+  if(stay&&stay.lat!=null&&stay.lng!=null)coords={lat:stay.lat,lng:stay.lng};
+ }
+ if(!coords){pill.style.display='none';return}
+ const now=Date.now();
+ if(weatherCache&&weatherCache.lat===coords.lat&&weatherCache.lng===coords.lng&&now-weatherCache.ts<30*60*1000){renderWeatherPill(weatherCache.data);return}
+ try{
+  const url=`https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lng}&appid=${WEATHER_API_KEY}&units=metric&lang=kr`;
+  const res=await fetch(url);
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.message||'weather api error');
+  weatherCache={ts:now,lat:coords.lat,lng:coords.lng,data};
+  renderWeatherPill(data);
+ }catch(e){console.error('날씨 불러오기 실패:',e&&e.message);pill.style.display='none'}
+}
+
 function dirLinks(lat,lng,name){
  const n=encodeURIComponent(name||'목적지');
  return {
@@ -1178,7 +1234,7 @@ function renderTagNotes(){
   save();renderTagNotes();
  });
 }
-function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||''}
+function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
