@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="제주플래너">
 <style>
-:root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F}
+:root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F;--done:#8A8272;--place:#E8952E;--sight:#2FA88F;--etc:#6B6456}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--stone);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;line-height:1.5}.app{max-width:760px;margin:auto;padding-bottom:80px}
 header{background:linear-gradient(160deg,#26221C 0%,#302A20 55%,#3B3225 100%);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}header .oreum{position:absolute;left:0;bottom:0;width:100%;height:46px;pointer-events:none}
 .weather-pill{align-items:center;gap:6px;background:#ffffff17;border:1px solid #ffffff2c;border-radius:999px;padding:4px 11px;font-size:12px;color:#F4F0E6;white-space:nowrap}
@@ -33,7 +33,7 @@ main{padding:18px}.section{display:none}.section.active{display:block}.title{fon
 .banner{background:#FBE9D6;color:#A95B20;border-radius:7px;padding:11px 13px;font-size:12px;font-weight:700;margin-bottom:12px}
 .pref-btn.active{background:var(--orange);border-color:var(--orange);color:#fff}
 .dur-btn.active{background:var(--sea);border-color:var(--sea);color:#fff}
-.course{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:13px;margin-bottom:9px;display:flex;gap:12px}.num{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--sea);display:grid;place-items:center;color:var(--sea);font:700 13px Georgia;flex:0 0 auto}.course.done{border-left:3px solid var(--sea)}.course.planned{border-left:3px solid var(--blue)}.course.done .num{background:var(--sea);color:white}.course h3{font-size:14px;margin:0}.meta{font-size:11px;color:#8a8272;margin:3px 0 6px}.desc{font-size:12px;color:#4b473b;margin:0}.badge{display:inline-block;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:800;margin-right:5px}.lo{background:#E4EEDF;color:var(--green)}.mid{background:#FBE9D6;color:var(--orange)}.hi{background:#F5DCD6;color:#B0503C}
+.course{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:13px;margin-bottom:9px;display:flex;gap:12px}.num{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--sea);display:grid;place-items:center;color:var(--sea);font:700 13px Georgia;flex:0 0 auto}.course.done{border-left:3px solid var(--done)}.course.planned{border-left:3px solid var(--blue)}.course.done .num{background:var(--done);color:white}.course h3{font-size:14px;margin:0}.meta{font-size:11px;color:#8a8272;margin:3px 0 6px}.desc{font-size:12px;color:#4b473b;margin:0}.badge{display:inline-block;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:800;margin-right:5px}.lo{background:#E4EEDF;color:var(--green)}.mid{background:#FBE9D6;color:var(--orange)}.hi{background:#F5DCD6;color:#B0503C}
 .course .actions{margin-top:8px}.course .btn{padding:5px 9px;font-size:11px}
 .schedule-day{background:var(--white);border:1px solid var(--line);border-radius:7px;margin-bottom:10px;overflow:hidden}.day-head{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#faf5e9;border-bottom:1px solid var(--line)}.day-head strong{font-size:13px}.day-head small{color:var(--muted)}.day-body{padding:12px}.day-body select,.day-body input,.day-body textarea,select,input,textarea{font:inherit}.day-body select{width:100%;padding:9px;border:1px solid var(--line);border-radius:5px;background:var(--stone);font-size:12px}.day-row{display:flex;gap:7px;margin-top:8px}.day-row input{flex:1;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--stone);font-size:12px}.day-row button{padding:8px 10px}.day-course{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:12px}.day-course button{border:0;background:transparent;color:var(--red);font-weight:700}
 .week-head{display:flex;align-items:center;justify-content:space-between;background:var(--white);border:1px solid var(--line);border-radius:7px;padding:13px 15px;margin-bottom:8px;cursor:pointer}
@@ -120,8 +120,8 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div class="banner" id="prefBanner"></div>
   <div class="card" id="todayCard"></div>
   <div class="grid2">
-    <div class="card stat-card"><b id="statDone" style="font-size:20px;color:var(--sea)">0/0</b><span class="small">완주 코스</span><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
-    <div class="card stat-card"><b id="statPlan" style="font-size:20px;color:var(--orange)">0</b><span class="small">이번 여행 계획 코스</span></div>
+    <div class="card stat-card"><b id="statDone" style="font-size:20px;color:var(--done)">0/0</b><span class="small">완주 코스</span><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
+    <div class="card stat-card"><b id="statPlan" style="font-size:20px;color:var(--blue)">0</b><span class="small">이번 여행 계획 코스</span></div>
   </div>
   <div class="actions" style="margin:12px 0">
     <button class="btn shortcut-btn" data-goto="courses">🥾 올레길 추천</button>
@@ -180,7 +180,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <section id="map" class="section">
   <h2 class="title">올레길 한눈에 보기</h2><p class="sub">실제 지도 데이터가 아닌 개념도입니다. 점을 누르면 코스를 확인할 수 있어요.</p>
   <div class="legend">
-    <span><i class="dot" style="background:#8A8272"></i>다녀옴</span><span><i class="dot" style="background:#3A6EA5"></i>이번 여행</span><span><i class="dot" style="background:#C0483A"></i>미계획</span><span><i class="dot" style="background:#E8952E"></i>장소</span><span><i class="dot" style="background:#8B5FA0"></i>숙소</span>
+    <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span>
   </div>
   <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
 </section>
@@ -798,22 +798,22 @@ function autoSchedule(){
 }
 function renderMap(){
  const wrap=document.getElementById('mapWrap'),ring=RING.map(id=>courses.find(c=>c.n===id)),branch=BRANCH.map(id=>courses.find(c=>c.n===id));let seg='',dots='';
- ring.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;seg+=`<line id="seg-${c.n}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#C0483A" stroke-width="7" stroke-linecap="round"/>`;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="#C0483A" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="7" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
- branch.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="#C0483A" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
- let extras='';foodSpots.forEach(f=>{const [x,y]=project(f[1],f[2]);extras+=`<circle class="food-node" data-name="${esc(f[0])}" cx="${x}" cy="${y}" r="5" fill="#E8952E" stroke="#fff"/>`});
- (profile.customPlaces||[]).forEach(p=>{if(p.lat===null||p.lat===undefined)return;const [x,y]=project(p.lat,p.lng),col=p.category==='sight'?'#2FA88F':p.category==='etc'?'#6B6456':'#E8952E';extras+=`<circle class="food-node" data-name="${esc(p.name)}" cx="${x}" cy="${y}" r="5" fill="${col}" stroke="#fff"/>`});
+ ring.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;seg+=`<line id="seg-${c.n}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--red)" stroke-width="7" stroke-linecap="round"/>`;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="var(--red)" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="7" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
+ branch.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="var(--red)" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
+ let extras='';foodSpots.forEach(f=>{const [x,y]=project(f[1],f[2]);extras+=`<circle class="food-node" data-name="${esc(f[0])}" cx="${x}" cy="${y}" r="5" fill="var(--place)" stroke="#fff"/>`});
+ (profile.customPlaces||[]).forEach(p=>{if(p.lat===null||p.lat===undefined)return;const [x,y]=project(p.lat,p.lng),col=p.category==='sight'?'var(--sight)':p.category==='etc'?'var(--etc)':'var(--place)';extras+=`<circle class="food-node" data-name="${esc(p.name)}" cx="${x}" cy="${y}" r="5" fill="${col}" stroke="#fff"/>`});
  let stay='';
  const staysWithLoc=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null).slice().sort((a,b)=>(a.checkin||'').localeCompare(b.checkin||''));
  staysWithLoc.forEach((s,idx)=>{
   const [x,y]=project(s.lat,s.lng);
-  stay+=`<g class="stay-node" data-name="${esc(s.name)}" data-range="${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}"><path d="M${x},${y-14}l8,11h-16z" fill="#8B5FA0" stroke="#fff"/><rect x="${x-7}" y="${y-3}" width="14" height="10" fill="#8B5FA0" stroke="#fff"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" pointer-events="none">${idx+1}</text></g>`;
+  stay+=`<g class="stay-node" data-name="${esc(s.name)}" data-range="${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}"><path d="M${x},${y-14}l8,11h-16z" fill="var(--purple)" stroke="#fff"/><rect x="${x-7}" y="${y-3}" width="14" height="10" fill="var(--purple)" stroke="#fff"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" pointer-events="none">${idx+1}</text></g>`;
  });
  const pts=ring.map(c=>project(...c.start));
  wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#DCEAEF"/><path d="${smooth(pts)}" fill="#D7E4C4" stroke="#9CB584" stroke-width="16" stroke-linejoin="round"/><circle cx="${W*.47}" cy="${H*.5}" r="5" fill="#6E8F58"/><text x="${W*.47}" y="${H*.5-10}" text-anchor="middle" font-size="9" fill="#5C7A4C">한라산</text>${extras}${seg}${dots}${stay}</svg>`;
  wrap.querySelectorAll('.map-node').forEach(n=>n.onclick=()=>{const c=courses.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`});
  wrap.querySelectorAll('.food-node').forEach(n=>n.onclick=()=>document.getElementById('mapSelected').textContent='📍 '+n.dataset.name);
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`);
- courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'#8A8272':plan?'#3A6EA5':'#C0483A';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
+ courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'var(--done)':plan?'var(--blue)':'var(--red)';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
 }
 function renderStayTab(){
  const el=document.getElementById('stayTabList');if(!el)return;
@@ -1160,11 +1160,12 @@ function renderPlaces(){
   const l=document.getElementById('customPlaceList');
   l.innerHTML=(profile.customPlaces||[]).map((p,i)=>{
     const icon=p.category==='food'?'🍽':p.category==='sight'?'📷':'📌';
+    const catColor=p.category==='sight'?'var(--sight)':p.category==='etc'?'var(--etc)':'var(--place)';
     const hasCoord = p.lat!==null && p.lat!==undefined;
     if(hasCoord){
-      return `<div class="day-course" style="flex-wrap:wrap"><span style="flex:1 1 100%">${icon} ${esc(p.name)}</span>${dirButtonsHtml(p.lat,p.lng,p.name)}<button class="btn danger" data-del="${i}" style="margin-top:6px">삭제</button></div>`;
+      return `<div class="day-course" style="flex-wrap:wrap;border-left:3px solid ${catColor}"><span style="flex:1 1 100%">${icon} ${esc(p.name)}</span>${dirButtonsHtml(p.lat,p.lng,p.name)}<button class="btn danger" data-del="${i}" style="margin-top:6px">삭제</button></div>`;
     }
-    return `<div class="day-course" style="flex-wrap:wrap;gap:6px">
+    return `<div class="day-course" style="flex-wrap:wrap;gap:6px;border-left:3px solid ${catColor}">
       <span style="flex:1 1 100%">${icon} ${esc(p.name)} <span class="small" style="color:#B0503C">· 좌표 없음</span></span>
       <input type="text" data-coordfor="${i}" placeholder="좌표 또는 링크 추가" style="flex:1;min-width:140px">
       <button class="btn blue" data-setcoord="${i}">저장</button>
