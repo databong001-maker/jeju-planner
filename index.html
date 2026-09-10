@@ -26,7 +26,6 @@ main{padding:18px}.section{display:none}.section.active{display:block}.title{fon
 .card{background:var(--white);border:1px solid var(--line);border-radius:7px;padding:15px;margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid2{grid-template-columns:1fr}}
 .stat-card{text-align:center;display:flex;flex-direction:column;align-items:center}.stat-card .small{margin-top:2px}
 #todayCard{display:flex;align-items:center;gap:12px}#todayCard .today-emoji{font-size:26px}#todayCard .today-title{font-weight:700;font-size:14px}#todayCard .today-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.shortcut-btn{flex:1}
 .stat{padding:12px;border:1px solid var(--line);background:var(--white);border-radius:7px}.stat b{display:block;font-size:22px}.stat span{font-size:11px;color:var(--muted)}
 .progress{height:8px;background:var(--stone2);border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--sea);width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:8px 11px;border-radius:20px;font-weight:750;font-size:12px;cursor:pointer}.btn.primary{background:var(--orange);border-color:var(--orange);color:white}.btn.blue{background:var(--blue);border-color:var(--blue);color:white}.btn.green{background:var(--sea);border-color:var(--sea);color:white}.btn.danger{color:var(--red)}
 .seg-tabs{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}.seg-tab{border:1px solid var(--line);background:var(--stone);color:var(--ink);padding:5px 9px;border-radius:14px;font-weight:750;font-size:11px;cursor:pointer}.seg-tab.active-seg{background:var(--ink);border-color:var(--ink);color:#fff}.seg-panel{margin-top:8px}
@@ -119,16 +118,6 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <main>
 <section id="home" class="section active">
   <h2 class="title">이번 제주, 이렇게 시작해요</h2><p class="sub">로그인한 계정에 저장되어 다른 기기에서도 이어서 볼 수 있어요. 백업 파일로도 내보낼 수 있어요.</p>
-  <div class="banner" id="prefBanner"></div>
-  <div class="card" id="todayCard"></div>
-  <div class="grid2">
-    <div class="card stat-card"><b id="statDone" style="font-size:20px;color:var(--done)">0/0</b><span class="small">완주 코스</span><div class="progress" style="margin-top:8px"><i id="progressBar"></i></div><p class="small" id="progressText" style="margin:6px 0 0">0%</p></div>
-    <div class="card stat-card"><b id="statPlan" style="font-size:20px;color:var(--blue)">0</b><span class="small">이번 여행 계획 코스</span></div>
-  </div>
-  <div class="actions" style="margin:12px 0">
-    <button class="btn shortcut-btn" data-goto="courses">🥾 올레길 추천</button>
-    <button class="btn shortcut-btn" data-goto="food">🍽 주변 맛집</button>
-  </div>
   <div class="card">
     <b>여행 스타일</b>
     <p class="small" style="margin:4px 0 8px">홈 배너와 추천 문구에 반영돼요</p>
@@ -138,6 +127,14 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
       <button class="btn pref-btn" data-pref="relax">☕ 여유롭게</button>
     </div>
   </div>
+  <div class="banner" id="prefBanner"></div>
+  <div class="card" id="todayCard"></div>
+  <div class="card" style="display:flex;align-items:stretch;justify-content:space-around;text-align:center;padding:13px 10px;gap:10px">
+    <div style="flex:1"><b id="statDone" style="font-size:21px;color:var(--done)">0/0</b><div class="small" style="margin-top:2px">완주 코스</div><div class="progress" style="margin-top:6px"><i id="progressBar"></i></div></div>
+    <div style="width:1px;background:var(--line)"></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center"><b id="statPlan" style="font-size:21px;color:var(--blue)">0</b><div class="small" style="margin-top:2px">이번 여행 계획</div></div>
+  </div>
+  <p class="small hidden" id="progressText"></p>
   <div class="card" id="periodCard">
     <b>제주살이 기간</b>
     <label for="departureDate">시작일</label><input type="date" id="departureDate">
@@ -746,7 +743,6 @@ function renderTodayCard(){
   el.innerHTML=`<span class="today-emoji">${info[0]}</span><div><div class="today-title">DAY ${idx} · ${info[1]}</div><div class="today-sub">${sub}</div></div>`;
  }
 }
-document.querySelectorAll('.shortcut-btn').forEach(b=>b.onclick=()=>showTab(b.dataset.goto));
 function renderDday(){
  const t=new Date(profile.departure+'T00:00:00'),d=Math.ceil((t-new Date())/86400000);
  document.getElementById('ddayNum').textContent=d>0?'D-'+d:d===0?'D-DAY':'D+'+Math.abs(d);
