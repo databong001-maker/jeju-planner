@@ -394,6 +394,7 @@ function DiaryApp({ user }) {
         {showStats ? (
           <StatsView entries={allEntries} month={statsMonth} setMonth={setStatsMonth} />
         ) : (
+        <>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 22 }}>
           <button onClick={goPrevWeek} style={navBtnStyle}>‹</button>
           <div style={{ display: "flex", flex: 1, justifyContent: "space-between" }}>
@@ -523,6 +524,7 @@ function DiaryApp({ user }) {
             <div style={{ textAlign: "center", fontSize: 12, color: C.inkFaint, height: 20, marginTop: 10 }}>{status}</div>
           </>
         )}
+        </>
         )}
       </div>
     </div>
