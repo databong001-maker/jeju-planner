@@ -60,6 +60,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 .hidden{display:none!important}
 #authOverlay{position:fixed;inset:0;background:var(--stone);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 #courseDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#courseDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#courseDetailOverlay h3{margin:18px 0 8px}
+.detail-list{margin:0;padding-left:18px;font-size:12px;color:#4b473b;line-height:1.7}
 #authOverlay .box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px 20px;max-width:340px;width:100%}
 #authOverlay h1{font:600 22px Georgia,serif;margin:0 0 4px}
 #authOverlay p.small{margin:0 0 16px}
@@ -474,6 +475,12 @@ const raw=[
 ['21','하도해녀박물관 → 종달바당','11.3km','3~4시간','lo','지미봉 정상에서 마지막 전망을 즐기고 토끼섬을 지나 종달리 바당에서 정규 코스의 대장정을 마무리해요.','33.5279,126.8579','33.5178,126.9130']
 ];
 const courses=raw.map(x=>({n:x[0],name:x[1],dist:x[2],time:x[3],level:x[4],desc:x[5],start:x[6].split(',').map(Number),end:x[7].split(',').map(Number)}));
+// 코스별 상세 정보(제주올레 공식 정보 기준, 텍스트 위주). 아직 없는 코스는 기본 요약만 표시됨. 순차적으로 채워나갈 예정.
+const courseDetails={
+ '1':{route:'시흥리(시흥초등학교/버스정류장) → 말미오름 → 알오름 → 종달리(옛 소금밭) → 성산갑문 → 수마포 → 광치기해변(종점)',distText:'약 15.1km',timeText:'약 4~5시간',levelNote:'보통(중) · 말미오름·알오름 구간 오르막 포함',highlights:[{name:'말미오름·알오름',desc:'성산일출봉, 우도, 한라산 등 동부 경관을 조망할 수 있어요.'},{name:'종달리 옛 소금밭',desc:'과거 소금을 만들던 자리예요.'},{name:'광치기해변',desc:'썰물 때 넓은 암반지대(너럭바위)가 드러나요.'}],amenities:{store:'CU(종달1리 교차로), 목화휴게소(중간지점)',parking:'코스 내 주차 불가능',contact:'제주올레 콜센터 064-762-2190'}},
+ '1-1':{route:'천진항(또는 하우목동항) → 쇠물통 언덕 → 호밀밭 → 우도봉 → 비양도 조망 → 하고수동해수욕장 → 검멀레해수욕장 → 천진항(원점회귀)',distText:'약 11.3km',timeText:'약 3~4시간',levelNote:'쉬움(하) · 큰 굴곡 없이 평탄, 차량·전동수단 통행 많아 주의',highlights:[{name:'우도봉',desc:'우도의 정상. 등대와 탁 트인 바다 전망을 볼 수 있어요.'},{name:'검멀레해수욕장·서빈백사',desc:'우도만의 독특한 검은 모래·홍조단괴 해변이에요.'},{name:'하고수동해수욕장',desc:'식당가가 많아 식사하기 좋은 구간이에요.'}],amenities:{store:'하고수동·검멀레해수욕장 인근 식당가',parking:'성산항/하우목동항 등에서 여객선으로 진입, 코스 내 별도 주차 없음',contact:'제주올레 콜센터 064-762-2190'}},
+ '2':{route:'광치기해변 → 내수면 둑방길 → 식산봉 → 오조포구·오조리마을 → 대수산봉 → 혼인지 → 온평포구(종점)',distText:'약 15.6km',timeText:'약 5~6시간',levelNote:'보통(중)',highlights:[{name:'식산봉',desc:'밀물 때 섬처럼 보이는 작은 오름으로 철새도래지예요.'},{name:'혼인지',desc:'삼성신화(고을나·양을나·부을나) 전설이 깃든 연못이에요.'},{name:'대수산봉',desc:'정상에서 성산일출봉과 우도를 조망할 수 있어요.'}],amenities:{parking:'코스 시작·종점에 별도 주차장 없음(대중교통 권장)',contact:'제주올레 콜센터 064-762-2190'}}
+};
 const level={lo:'하',mid:'중',hi:'상'};
 const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21'];
 const BRANCH=['1-1','7-1','10-1','14-1','18-1'];
@@ -692,6 +699,10 @@ function openCourseDetail(n){
  const stopsNear=findNearestBusStops(c.start[0],c.start[1],2);
  const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
  const content=document.getElementById('courseDetailContent');
+ const cd=courseDetails[c.n];
+ const infoHtml=cd?`<h3>🧭 코스 정보</h3><ul class="detail-list"><li>구간: ${esc(cd.route)}</li><li>거리: ${esc(cd.distText||c.dist)}</li><li>소요시간: ${esc(cd.timeText||c.time)}</li><li>난이도: ${esc(cd.levelNote||level[c.level])}</li></ul>`:'';
+ const highlightHtml=cd&&cd.highlights&&cd.highlights.length?`<h3>👀 코스 주요 볼거리</h3><ul class="detail-list">${cd.highlights.map(h=>`<li><b>${esc(h.name)}</b>: ${esc(h.desc)}</li>`).join('')}</ul>`:'';
+ const amenityHtml=cd&&cd.amenities?`<h3>🏪 편의시설 및 기타</h3><ul class="detail-list">${cd.amenities.store?`<li>매점: ${esc(cd.amenities.store)}</li>`:''}${cd.amenities.parking?`<li>주차: ${esc(cd.amenities.parking)}</li>`:''}${cd.amenities.contact?`<li>문의: ${esc(cd.amenities.contact)}</li>`:''}</ul>`:'';
  content.innerHTML=`
   <div class="num" style="width:44px;height:44px;font-size:16px">${esc(c.n)}</div>
   <h2 class="title" style="margin:10px 0 0">${esc(c.name)}</h2>
@@ -702,6 +713,9 @@ function openCourseDetail(n){
    <button class="btn" id="detailCheckBtn" type="button">${done?'✓ 다녀옴':'다녀옴 체크'}</button>
    <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
   </div>
+  ${infoHtml}
+  ${highlightHtml}
+  ${amenityHtml}
   <h3>🏞 코스 주변 볼거리</h3>
   ${attrHtml}
   <h3>🍽 코스 주변 맛집</h3>
