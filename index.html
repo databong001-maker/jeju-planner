@@ -1,8 +1,6 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#26221C">
@@ -548,6 +546,7 @@ const localFoodData=[
   {name:'세화·종달리 카페거리',desc:'조용한 해변 카페, 당근빵',lat:33.5279,lng:126.8579}
  ]}
 ];
+const allFoodItems=localFoodData.flatMap(g=>g.items);
 const attractionData=[
  {region:'성산 · 표선 (동부)',items:[
   {name:'성산일출봉',desc:'유네스코 세계자연유산. 일출 명소로 유명한 화산 응회구',lat:33.4587,lng:126.9425},
