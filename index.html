@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="제주플래너">
 <style>
-:root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F;--done:#8A8272;--place:#E8952E;--sight:#2FA88F;--etc:#6B6456}
+:root{--stone:#F4F0E6;--stone2:#EAE3D3;--ink:#26221C;--orange:#E17A2D;--sea:#1F6E74;--green:#5C7A4C;--blue:#3A6EA5;--purple:#8B5FA0;--red:#C0483A;--white:#FFFCF5;--line:#D8CEB8;--muted:#77705F;--done:#8A8272;--place:#E8952E;--sight:#2FA88F;--etc:#6B6456;--gallery:#A2447A}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--stone);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;line-height:1.5}.app{max-width:760px;margin:auto;padding-bottom:80px}
 header{background:linear-gradient(160deg,#26221C 0%,#302A20 55%,#3B3225 100%);color:var(--stone);padding:25px 20px 20px;position:relative;overflow:hidden}header:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff22;border-radius:50%;right:-60px;top:-70px}header .oreum{position:absolute;left:0;bottom:0;width:100%;height:46px;pointer-events:none}
 .pulse-node{animation:pulseNode .7s ease-in-out 2}
@@ -60,6 +60,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 .hidden{display:none!important}
 #authOverlay{position:fixed;inset:0;background:var(--stone);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 #courseDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#courseDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#courseDetailOverlay h3{margin:18px 0 8px}
+#galleryDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#galleryDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#galleryDetailOverlay h3{margin:18px 0 8px}
 .detail-list{margin:0;padding-left:18px;font-size:12px;color:#4b473b;line-height:1.7}
 #authOverlay .box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px 20px;max-width:340px;width:100%}
 #authOverlay h1{font:600 22px Georgia,serif;margin:0 0 4px}
@@ -75,6 +76,12 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div class="inner">
     <button class="btn" id="courseDetailBack" type="button">← 뒤로</button>
     <div id="courseDetailContent" style="margin-top:12px"></div>
+  </div>
+</div>
+<div id="galleryDetailOverlay" class="hidden">
+  <div class="inner">
+    <button class="btn" id="galleryDetailBack" type="button">← 뒤로</button>
+    <div id="galleryDetailContent" style="margin-top:12px"></div>
   </div>
 </div>
 <div id="authOverlay">
@@ -110,6 +117,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <button class="active" data-tab="home">홈</button>
   <button data-tab="schedule" id="scheduleTabBtn">일정</button>
   <button data-tab="courses">올레길</button>
+  <button data-tab="galleries">미술관</button>
   <button data-tab="map">지도</button>
   <button data-tab="food">장소</button>
   <button data-tab="transit">베이스</button>
@@ -186,6 +194,12 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div id="courseList"></div>
 </section>
 
+<section id="galleries" class="section">
+  <h2 class="title">제주 미술관 · 박물관</h2><p class="sub">총 14곳 · 방문과 여행 계획을 각각 저장합니다.</p>
+  <div class="banner">💡 운영시간·입장료는 자주 바뀌니 방문 전 공식 홈페이지나 전화로 확인해주세요.</div>
+  <div id="galleryList"></div>
+</section>
+
 <section id="map" class="section">
   <h2 class="title">올레길 한눈에 보기</h2><p class="sub">실제 지도 데이터가 아닌 개념도입니다. 점을 누르면 코스를 확인할 수 있어요.</p>
   <div class="seg-tabs">
@@ -194,7 +208,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   </div>
   <div id="mapCourseView" style="margin-top:10px">
     <div class="legend">
-      <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span>
+      <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span><span><i class="dot" style="background:var(--gallery)"></i>미술관</span>
     </div>
     <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
   </div>
@@ -519,6 +533,39 @@ const courseDetails={
  '20':{route:'김녕서포구 → 월정리해변 → 세화해변 카페거리 → 하도해녀박물관(종점)',distText:'약 17.3km',timeText:'약 5~6시간',levelNote:'보통(중)',highlights:[{name:'월정리해변',desc:'이국적인 에메랄드빛 바다와 카페거리로 유명해요.'},{name:'세화해변',desc:'매주 오일장이 서는 마을과 가까운 해변이에요.'}],amenities:{parking:'코스 시작·종점에 별도 주차장 없음(대중교통 권장)',contact:'제주올레 콜센터 064-762-2190'}},
  '21':{route:'하도해녀박물관 → 지미봉 → 토끼섬 → 종달바당(종점)',distText:'약 11.3km',timeText:'약 3~4시간',levelNote:'쉬움(하) · 정규 코스의 마지막 구간',highlights:[{name:'지미봉',desc:'정상에서 정규 코스의 마지막 전망을 즐길 수 있어요.'},{name:'토끼섬',desc:'썰물 때 걸어 들어갈 수 있는 작은 무인도예요.'},{name:'종달바당',desc:'제주올레 정규 코스가 완성되는 지점이에요.'}],amenities:{parking:'코스 시작·종점에 별도 주차장 없음(대중교통 권장)',contact:'제주올레 콜센터 064-762-2190'}}
 };
+const galleriesRaw=[
+['1','제주도립미술관','제주시 연동','제주도가 운영하는 대표 공립 미술관. 넓은 잔디밭과 함께 제주 자연을 담은 상설전·기획전을 볼 수 있어요.','33.4670,126.4830'],
+['2','제주현대미술관','한경면 저지리','저지문화예술인마을 안에 있는 도립 미술관으로, 현대미술 상설·기획전과 함께 조각공원을 산책할 수 있어요.','33.3226,126.2536'],
+['3','김창열미술관','한경면 저지리','제주현대미술관과 같은 저지문화예술인마을 부지에 있는 미술관으로, "물방울 화가" 김창열 화백의 작품을 상설 전시해요.','33.3222,126.2540'],
+['4','아라리오뮤지엄','제주시 원도심(탑동)','옛 극장·모텔 건물을 개조해 만든 현대미술관으로, 탑동·동문시장과 가까워 원도심 산책과 함께 들르기 좋아요.','33.5147,126.5219'],
+['5','이중섭미술관','서귀포시 이중섭거리','화가 이중섭이 피란 시절 머물렀던 곳 인근에 세워진 미술관으로, 이중섭거리·이중섭 거주지와 함께 둘러보기 좋아요.','33.2489,126.5628'],
+['6','기당미술관','서귀포시 서홍동','제주 최초의 시립미술관으로, 재일교포 화가 변시지 화백의 제주 풍경화를 중심으로 전시해요.','33.2465,126.5580'],
+['7','소암기념관','서귀포시 서귀동','제주 출신 서예가 소암 현중화 선생의 작품을 모은 기념관으로, 서귀포 원도심 안에 있어 조용히 둘러보기 좋아요.','33.2515,126.5650'],
+['8','본태박물관','안덕면','건축가 안도 다다오가 설계한 건물 자체가 볼거리인 박물관으로, 한국 전통 공예품과 현대미술을 함께 전시해요.','33.2743,126.4088'],
+['9','포도뮤지엄','안덕면 상천리','사회적 메시지를 담은 기획전 위주의 사립 미술관으로, 건축과 자연이 어우러진 공간 구성이 특징이에요.','33.2565,126.4130'],
+['10','왈종미술관','서귀포시 서귀동','한국화가 이왈종 화백의 개인 미술관으로, 옥상 정원에서 서귀포 앞바다 전망을 함께 즐길 수 있어요.','33.2438,126.5709'],
+['11','김영갑갤러리 두모악','성산읍 삼달리','폐교를 개조한 갤러리로, 평생 제주 오름과 풍경을 찍은 사진작가 김영갑의 작품과 정원을 함께 볼 수 있어요.','33.3900,126.8500'],
+['12','빛의벙커','성산읍 고성리','옛 국가 통신시설을 개조한 몰입형 미디어아트 전시관으로, 명화를 대형 화면·음악과 함께 감상해요.','33.4460,126.8890'],
+['13','유민미술관','성산읍 섭지코지','안도 다다오가 설계한 건물에 자리한 사진·유리공예 전문 미술관으로, 섭지코지 산책과 함께 들르기 좋아요.','33.4239,126.9268'],
+['14','훈데르트바서파크','우도','오스트리아 건축가 훈데르트바서를 테마로 한 전시·체험 공간으로, 우도 올레와 함께 묶어 둘러보기 좋아요.','33.5056,126.9508']
+];
+const galleries=galleriesRaw.map(x=>({n:x[0],name:x[1],area:x[2],desc:x[3],loc:x[4].split(',').map(Number)}));
+const galleryDetails={
+ '1':{addr:'제주시 1100로 2894-78',hours:'09:00~18:00(월요일 휴관, 계절별 변동 가능)',fee:'상설전 무료 · 기획전 별도',parking:'미술관 내 주차장',contact:'064-710-4300',highlights:[{name:'잔디마당·야외조각',desc:'미술관 앞 넓은 잔디마당에서 조각 작품과 함께 쉬어가기 좋아요.'}]},
+ '2':{addr:'제주시 한경면 저지14길 35',hours:'09:00~18:00(월요일 휴관)',fee:'유료(할인 대상 있음)',parking:'미술관 내 주차장',contact:'064-710-7801',highlights:[{name:'조각공원',desc:'야외 조각공원을 함께 산책할 수 있어요.'},{name:'저지문화예술인마을',desc:'주변에 여러 작가 갤러리가 모여 있어요.'}]},
+ '3':{addr:'제주시 한경면 저지14길 35(제주현대미술관 인근)',hours:'09:00~18:00(월요일 휴관)',fee:'유료',parking:'인근 공용 주차장',contact:'064-710-7801',highlights:[{name:'물방울 연작',desc:'김창열 화백의 대표작인 물방울 그림들을 모아 전시해요.'}]},
+ '4':{addr:'제주시 탑동로11길 4',hours:'10:00~19:00(요일별 변동 가능)',fee:'유료',parking:'전용 주차장 협소, 원도심 공영주차장 이용 권장',contact:'064-720-8202',highlights:[{name:'옛 건물 리모델링',desc:'극장·모텔 등 여러 건물을 개조해 전시장으로 써서 공간 자체가 특색 있어요.'},{name:'탑동·동문시장',desc:'도보로 원도심 구경과 함께 묶기 좋아요.'}]},
+ '5':{addr:'서귀포시 이중섭로 27-3',hours:'09:00~18:00(월요일 휴관)',fee:'유료(소액)',parking:'인근 공영주차장',contact:'064-760-3567',highlights:[{name:'이중섭거리·거주지',desc:'미술관 주변 골목이 이중섭 화가가 실제 머물던 거리예요.'}]},
+ '6':{addr:'서귀포시 남성중로153번길 15',hours:'09:00~18:00(월요일 휴관)',fee:'유료(소액)',parking:'미술관 내 주차장',contact:'064-733-1861',highlights:[{name:'변시지 화백 작품',desc:'제주 바람과 풍경을 담은 독특한 화풍의 작품을 볼 수 있어요.'}]},
+ '7':{addr:'서귀포시 서귀동(서귀포 원도심)',hours:'09:00~18:00(월요일 휴관)',fee:'무료',parking:'인근 공영주차장',contact:'064-760-3611',highlights:[{name:'서예 작품',desc:'소암 현중화 선생의 서예 작품을 조용히 감상할 수 있어요.'}]},
+ '8':{addr:'서귀포시 안덕면 산록남로762번길 69',hours:'10:00~18:00(연중무휴, 변동 가능)',fee:'유료',parking:'박물관 내 주차장',contact:'064-792-8108',highlights:[{name:'안도 다다오 건축',desc:'노출 콘크리트와 물, 빛을 활용한 건축 자체가 볼거리예요.'},{name:'전통 공예 컬렉션',desc:'조각보·소반 등 한국 전통 공예품을 함께 전시해요.'}]},
+ '9':{addr:'서귀포시 안덕면 산록남로 675',hours:'10:00~18:00(화요일 휴관 등 변동 가능)',fee:'유료',parking:'미술관 내 주차장',contact:'064-794-9096',highlights:[{name:'기획전 위주',desc:'고정 소장품보다 시의성 있는 기획전을 자주 선보여요.'}]},
+ '10':{addr:'서귀포시 칠십리로214번길 30',hours:'09:00~18:00(연중무휴, 변동 가능)',fee:'유료',parking:'미술관 내 주차장',contact:'064-763-3600',highlights:[{name:'옥상 정원',desc:'서귀포 앞바다와 섶섬 전망을 함께 즐길 수 있어요.'}]},
+ '11':{addr:'서귀포시 성산읍 삼달로 137',hours:'09:30~18:00(계절별 변동, 목요일 휴관 등)',fee:'유료(소액)',parking:'갤러리 내 주차장',contact:'064-784-9907',highlights:[{name:'폐교 리모델링',desc:'옛 삼달분교를 개조한 공간으로 정원과 사진이 함께 어우러져요.'},{name:'제주 오름 사진',desc:'평생 제주 오름과 풍경을 찍은 사진작가의 대표작들을 볼 수 있어요.'}]},
+ '12':{addr:'서귀포시 성산읍 고성리(빛의벙커로 검색)',hours:'10:00~19:00(연중무휴, 변동 가능)',fee:'유료',parking:'전시관 내 주차장',contact:'1522-2653',highlights:[{name:'몰입형 미디어아트',desc:'명화 이미지를 벽면 가득 투사해 음악과 함께 감상하는 방식이에요.'},{name:'옛 국가 통신시설',desc:'지하 벙커였던 공간을 그대로 활용해 독특한 분위기를 만들어요.'}]},
+ '13':{addr:'서귀포시 성산읍 섭지코지로 107',hours:'09:00~18:00(연중무휴, 변동 가능)',fee:'유료(소액)',parking:'섭지코지 내 주차장',contact:'064-731-7791',highlights:[{name:'안도 다다오 건축',desc:'유민미술관도 본태박물관과 같은 건축가가 설계했어요.'},{name:'섭지코지 산책',desc:'미술관 관람 전후로 섭지코지 해안 산책로를 함께 걷기 좋아요.'}]},
+ '14':{addr:'제주시 우도면(우도 내)',hours:'09:00~18:00(계절별 변동 가능)',fee:'유료',parking:'우도 내 주차 공간',contact:'064-799-0002',highlights:[{name:'훈데르트바서 건축',desc:'곡선과 원색이 두드러지는 독특한 건축 양식을 체험할 수 있어요.'},{name:'우도 올레와 연계',desc:'우도 올레(1-1코스) 걷기와 함께 묶어 일정을 짜기 좋아요.'}]}
+};
 const level={lo:'하',mid:'중',hi:'상'};
 const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21'];
 const BRANCH=['1-1','7-1','10-1','14-1','18-1'];
@@ -772,8 +819,66 @@ function openCourseDetail(n){
 function closeCourseDetail(){
  document.getElementById('courseDetailOverlay').classList.add('hidden');
 }
-window.addEventListener('popstate',()=>{closeCourseDetail()});
+function renderGalleries(){
+ const list=document.getElementById('galleryList');if(!list)return;list.innerHTML='';
+ galleries.forEach(g=>{
+  const id='gallery-'+g.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+  const el=document.createElement('div');el.className='course'+(done?' done':'')+(planned?' planned':'');
+  const mapUrl=`https://www.google.com/maps/search/?api=1&query=${g.loc.join(',')}`;
+  el.innerHTML=`<div class="num" style="border-color:var(--gallery);color:var(--gallery)">${esc(g.n)}</div><div style="flex:1"><h3>${esc(g.name)}</h3><div class="meta">${esc(g.area)}</div><p class="desc">${esc(g.desc)}</p><div class="actions"><button class="btn blue plan">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button><button class="btn check">${done?'✓ 다녀옴':'다녀옴 체크'}</button><a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a></div></div>`;
+  el.querySelector('.plan').onclick=()=>{toggle(profile.plan,id);save();renderAll()};
+  el.querySelector('.check').onclick=()=>{toggle(profile.done,id);save();renderAll()};
+  el.querySelector('.num').style.cursor='pointer';el.querySelector('.num').onclick=()=>openGalleryDetail(g.n);
+  el.querySelector('h3').style.cursor='pointer';el.querySelector('h3').onclick=()=>openGalleryDetail(g.n);
+  list.appendChild(el);
+ });
+}
+function openGalleryDetail(n){
+ const g=galleries.find(x=>x.n===n);if(!g)return;
+ const id='gallery-'+g.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+ const mapUrl=`https://www.google.com/maps/search/?api=1&query=${g.loc.join(',')}`;
+ const gd=galleryDetails[g.n];
+ const infoHtml=gd?`<h3>🧭 안내 정보</h3><ul class="detail-list">${gd.addr?`<li>주소: ${esc(gd.addr)}</li>`:''}${gd.hours?`<li>운영시간: ${esc(gd.hours)}</li>`:''}${gd.fee?`<li>입장료: ${esc(gd.fee)}</li>`:''}${gd.parking?`<li>주차: ${esc(gd.parking)}</li>`:''}${gd.contact?`<li>문의: ${esc(gd.contact)}</li>`:''}</ul>`:'';
+ const highlightHtml=gd&&gd.highlights&&gd.highlights.length?`<h3>👀 볼거리</h3><ul class="detail-list">${gd.highlights.map(h=>`<li><b>${esc(h.name)}</b>: ${esc(h.desc)}</li>`).join('')}</ul>`:'';
+ const nearCourses=courses.map(c=>({item:c,dist:haversineKm(g.loc[0],g.loc[1],c.start[0],c.start[1])})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const courseHtml=nearCourses.length?nearCourses.map(x=>`<div class="item">올레 ${esc(x.item.n)} · ${esc(x.item.name)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 올레코스 정보가 없어요.</p>';
+ const nearFood=getAllFoodItems().map(f=>({item:f,dist:haversineKm(g.loc[0],g.loc[1],f.lat,f.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const foodHtml=nearFood.length?nearFood.map(x=>`<div class="item">${esc(x.item.name)} · ${esc(x.item.desc)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 맛집 정보가 아직 없어요.</p>';
+ const stopsNear=findNearestBusStops(g.loc[0],g.loc[1],2);
+ const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
+ const content=document.getElementById('galleryDetailContent');
+ content.innerHTML=`
+  <div class="num" style="width:44px;height:44px;font-size:16px;border-color:var(--gallery);color:var(--gallery)">${esc(g.n)}</div>
+  <h2 class="title" style="margin:10px 0 0">${esc(g.name)}</h2>
+  <div class="meta" style="margin:6px 0">${esc(g.area)}</div>
+  <p class="desc">${esc(g.desc)}</p>
+  <div class="actions">
+   <button class="btn blue" id="detailGalleryPlanBtn" type="button">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button>
+   <button class="btn" id="detailGalleryCheckBtn" type="button">${done?'✓ 다녀옴':'다녀옴 체크'}</button>
+   <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
+  </div>
+  ${infoHtml}
+  ${highlightHtml}
+  <h3>🥾 주변 올레코스</h3>
+  ${courseHtml}
+  <h3>🍽 주변 맛집</h3>
+  ${foodHtml}
+  <h3>🚏 주변 정류장</h3>
+  ${stopsHtml}
+ `;
+ wireArrivalButtons(content);
+ document.getElementById('detailGalleryPlanBtn').onclick=()=>{toggle(profile.plan,id);save();renderAll();openGalleryDetail(n)};
+ document.getElementById('detailGalleryCheckBtn').onclick=()=>{toggle(profile.done,id);save();renderAll();openGalleryDetail(n)};
+ document.getElementById('galleryDetailOverlay').classList.remove('hidden');
+ window.scrollTo({top:0});
+ if(!history.state||history.state.galleryDetail!==n)history.pushState({galleryDetail:n},'','#gallery-'+n);
+}
+function closeGalleryDetail(){
+ document.getElementById('galleryDetailOverlay').classList.add('hidden');
+}
+window.addEventListener('popstate',()=>{closeCourseDetail();closeGalleryDetail()});
 document.getElementById('courseDetailBack').onclick=()=>{history.back()};
+document.getElementById('galleryDetailBack').onclick=()=>{history.back()};
 function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
  const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
@@ -875,6 +980,7 @@ function renderMap(){
  ring.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;seg+=`<line id="seg-${c.n}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--red)" stroke-width="7" stroke-linecap="round"/>`;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="var(--red)" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="7" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
  branch.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;dots+=`<circle class="map-node" data-id="${c.n}" cx="${x}" cy="${y}" r="9" fill="var(--red)" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
  let extras='';foodSpots.forEach(f=>{const [x,y]=project(f[1],f[2]);extras+=`<circle class="food-node" data-name="${esc(f[0])}" cx="${x}" cy="${y}" r="5" fill="var(--place)" stroke="#fff"/>`});
+ galleries.forEach(g=>{const [x,y]=project(g.loc[0],g.loc[1]),id='gallery-'+g.n,done=profile.done.includes(id),planned=profile.plan.includes(id),col=done?'var(--done)':planned?'var(--blue)':'var(--gallery)';extras+=`<circle class="gallery-node" data-id="${esc(g.n)}" cx="${x}" cy="${y}" r="6" fill="${col}" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="7" fill="#fff" pointer-events="none">🎨</text>`});
  (profile.customPlaces||[]).forEach(p=>{if(p.lat===null||p.lat===undefined)return;const [x,y]=project(p.lat,p.lng),col=p.category==='sight'?'var(--sight)':p.category==='etc'?'var(--etc)':'var(--place)';extras+=`<circle class="food-node" data-name="${esc(p.name)}" cx="${x}" cy="${y}" r="5" fill="${col}" stroke="#fff"/>`});
  let stay='';
  const staysWithLoc=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null).slice().sort((a,b)=>(a.checkin||'').localeCompare(b.checkin||''));
@@ -886,6 +992,7 @@ function renderMap(){
  wrap.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#DCEAEF"/><path d="${smooth(pts)}" fill="#D7E4C4" stroke="#9CB584" stroke-width="16" stroke-linejoin="round"/><circle cx="${W*.47}" cy="${H*.5}" r="5" fill="#6E8F58"/><text x="${W*.47}" y="${H*.5-10}" text-anchor="middle" font-size="9" fill="#5C7A4C">한라산</text>${extras}${seg}${dots}${stay}</svg>`;
  wrap.querySelectorAll('.map-node').forEach(n=>n.onclick=()=>{const c=courses.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`});
  wrap.querySelectorAll('.food-node').forEach(n=>n.onclick=()=>document.getElementById('mapSelected').textContent='📍 '+n.dataset.name);
+ wrap.querySelectorAll('.gallery-node').forEach(n=>n.onclick=()=>{const g=galleries.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('gallery-'+g.n)?'✓ 다녀옴':'예정'} · 🎨 ${g.name} · ${g.area}`});
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`);
  courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'var(--done)':plan?'var(--blue)':'var(--red)';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
 }
@@ -1389,7 +1496,7 @@ function renderTagNotes(){
   save();renderTagNotes();
  });
 }
-function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
+function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderGalleries();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
