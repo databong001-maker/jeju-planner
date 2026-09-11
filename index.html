@@ -434,6 +434,7 @@ auth.onAuthStateChanged(async(user)=>{
     authMsg('');
     await loadProfileForUser(user.uid);
     renderAll();
+    loadSimpleDiaryMap();
   }else{
     currentUser=null;
     document.getElementById('authOverlay').classList.remove('hidden');
@@ -799,6 +800,30 @@ function renderDday(){
 let openWeeks = {}; // each week's expand state is independent; all weeks start collapsed
 
 function dateStrForDay(i){const d=new Date(profile.departure+'T00:00:00');d.setDate(d.getDate()+i-1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+
+// ---- 간편다이어리 연동 (같은 Firebase 계정의 diary_entries 컬렉션) ----
+const SIMPLE_DIARY_URL='https://simple-diary-six.vercel.app/';
+let simpleDiaryMap={};
+async function loadSimpleDiaryMap(){
+  if(!currentUser||!db)return;
+  try{
+    const snap=await db.collection('diary_entries').where('uid','==',currentUser.uid).get();
+    const map={};
+    snap.forEach(doc=>{const d=doc.data();if(d.date)map[d.date]=d;});
+    simpleDiaryMap=map;
+    renderDiary();
+  }catch(e){/* 무시: 간편다이어리 앱을 아직 안 써봤을 수도 있음 */}
+}
+function simpleDiarySummary(entry){
+  if(!entry)return '';
+  const bits=[];
+  if(entry.weather)bits.push(entry.weather);
+  if(entry.mood)bits.push(entry.mood);
+  if(entry.type)bits.push(entry.type);
+  const head=bits.join(' · ');
+  const line=entry.summary?`“${entry.summary}”`:'';
+  return [head,line].filter(Boolean).join(' — ');
+}
 function stayForDate(dateStr){return (profile.stays||[]).find(s=>s.checkin&&s.checkout&&dateStr>=s.checkin&&dateStr<=s.checkout)||null}
 function renderSchedule(){
  const wrap=document.getElementById('scheduleList');wrap.innerHTML='';
@@ -1329,11 +1354,18 @@ function renderDiary(){
   const courseName=sched&&sched.type==='olle'&&sched.course?(courses.find(c=>c.n===sched.course)||{}).name:'';
   const autoBits=[stay?`🏠 ${esc(stay.name)}`:'',courseName?`🥾 올레 ${esc(sched.course)} · ${esc(courseName)}`:''].filter(Boolean).join(' · ')||'일정 없음';
   const entry=profile.diary[i]||{mood:'',photoLink:''};
+  const sdEntry=simpleDiaryMap[dateStr];
+  const sdSummary=simpleDiarySummary(sdEntry);
+  const sdBlock=`<div class="day-row" style="margin-top:6px;padding:8px;border:1px solid var(--line,#ddd);border-radius:8px">
+    ${sdSummary?`<div class="small" style="margin-bottom:6px">📔 ${esc(sdSummary)}</div>`:`<div class="small" style="margin-bottom:6px;opacity:.6">📔 간편다이어리에 이 날 기록이 아직 없어요</div>`}
+    <a href="${SIMPLE_DIARY_URL}?date=${dateStr}" target="_blank" rel="noopener" class="btn small">${sdEntry?'간편다이어리에서 이어쓰기':'간편다이어리에 쓰기'}</a>
+   </div>`;
   html+=`<div class="schedule-day"><div class="day-head"><strong>DAY ${i} · ${ds}</strong><span class="small">${autoBits}</span></div>
    <div class="day-body">
     <div class="day-row"><input class="diary-mood" data-day="${i}" placeholder="오늘 한 줄 (예: 협재 노을 진짜 예뻤다)" value="${esc(entry.mood||'')}"><button class="btn diary-mic" data-day="${i}" type="button" title="음성으로 입력">🎤</button></div>
     <div class="day-row"><input class="diary-link" data-day="${i}" placeholder="구글포토 공유 링크 (선택)" value="${esc(entry.photoLink||'')}"><button class="btn diary-save" data-day="${i}">저장</button></div>
     ${entry.photoLink?`<a href="${esc(entry.photoLink)}" target="_blank" rel="noopener" class="small" style="display:block;margin-top:6px;color:var(--sea)">📷 사진 보러가기</a>`:''}
+    ${sdBlock}
    </div></div>`;
  }
  wrap.innerHTML=html;
