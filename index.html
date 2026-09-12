@@ -210,6 +210,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <div class="legend">
       <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span><span><i class="dot" style="background:var(--gallery);border-radius:2px;transform:rotate(45deg)"></i>미술관</span>
     </div>
+    <select id="mapQuickFind" style="margin-top:10px;width:100%"><option value="">🔍 코스 · 미술관 빠르게 찾기</option></select>
     <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
   </div>
   <div id="mapTimelineView" class="hidden" style="margin-top:10px">
@@ -995,6 +996,7 @@ function renderMap(){
  wrap.querySelectorAll('.gallery-node').forEach(n=>n.onclick=()=>{const g=galleries.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('gallery-'+g.n)?'✓ 다녀옴':'예정'} · 🎨 ${g.name} · ${g.area}`});
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`);
  courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'var(--done)':plan?'var(--blue)':'var(--red)';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
+ initMapQuickFind();
 }
 function renderStayTab(){
  const el=document.getElementById('stayTabList');if(!el)return;
@@ -1518,6 +1520,48 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dat
   if(next!==i)showTab(tabs[next].dataset.tab);
  },{passive:true});
 })();
+function initMapQuickFind(){
+ const sel=document.getElementById('mapQuickFind');if(!sel)return;
+ const prevVal=sel.value;
+ sel.innerHTML='<option value="">🔍 카테고리별로 빠르게 찾기</option>';
+ const addGroup=(label,items)=>{if(!items.length)return;const og=document.createElement('optgroup');og.label=label;items.forEach(it=>og.appendChild(it));sel.appendChild(og)};
+ addGroup('🥾 올레길',courses.map(c=>{const o=document.createElement('option');o.value='course:'+c.n;o.textContent=`올레 ${c.n} · ${c.name}`;return o}));
+ addGroup('🎨 미술관',galleries.map(g=>{const o=document.createElement('option');o.value='gallery:'+g.n;o.textContent=g.name;return o}));
+ const staysWithLoc=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null);
+ addGroup('🏠 숙소',staysWithLoc.map((s,idx)=>{const o=document.createElement('option');o.value='stay:'+idx;o.textContent=s.name;return o}));
+ const placesWithLoc=(profile.customPlaces||[]).filter(p=>p.lat!=null&&p.lng!=null);
+ addGroup('📍 장소',placesWithLoc.map((p,idx)=>{const o=document.createElement('option');o.value='place:'+idx;o.textContent=p.name;return o}));
+ sel.value=prevVal&&[...sel.options].some(o=>o.value===prevVal)?prevVal:'';
+ sel.onchange=()=>{
+  if(!sel.value)return;
+  const [type,idRaw]=sel.value.split(':');
+  document.getElementById('mapViewCourseBtn').click();
+  setTimeout(()=>{
+   let node=null,text='';
+   if(type==='course'){
+    const c=courses.find(x=>x.n===idRaw);if(!c){sel.value='';return}
+    node=document.querySelector(`.map-node[data-id="${CSS.escape(idRaw)}"]`);
+    text=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`;
+   }else if(type==='gallery'){
+    const g=galleries.find(x=>x.n===idRaw);if(!g){sel.value='';return}
+    node=document.querySelector(`.gallery-node[data-id="${CSS.escape(idRaw)}"] path`);
+    text=`${profile.done.includes('gallery-'+g.n)?'✓ 다녀옴':'예정'} · 🎨 ${g.name} · ${g.area}`;
+   }else if(type==='stay'){
+    const list=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null),s=list[+idRaw];if(!s){sel.value='';return}
+    node=document.querySelector(`.stay-node[data-name="${CSS.escape(s.name)}"]`);
+    text=`🏠 ${s.name} · ${fmtMD(s.checkin)} ~ ${fmtMD(s.checkout)}`;
+   }else if(type==='place'){
+    const list=(profile.customPlaces||[]).filter(p=>p.lat!=null&&p.lng!=null),p=list[+idRaw];if(!p){sel.value='';return}
+    node=document.querySelector(`.food-node[data-name="${CSS.escape(p.name)}"]`);
+    text=`📍 ${p.name}`;
+   }
+   document.getElementById('mapSelected').textContent=text;
+   if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('pulse-node');setTimeout(()=>node.classList.remove('pulse-node'),1800)}
+   sel.value='';
+  },80);
+ };
+}
+initMapQuickFind();
 document.getElementById('mapViewCourseBtn').onclick=()=>{
  document.getElementById('mapViewCourseBtn').classList.add('active-seg');
  document.getElementById('mapViewTimelineBtn').classList.remove('active-seg');
