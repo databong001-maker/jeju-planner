@@ -1771,6 +1771,13 @@ async function resolveLocation(raw){
       }
     }catch(e){ return null; }
   }
+  return await resolveLocationBest(searchText); // 카카오 우선, 실패 시 OSM으로 폴백
+}
+// 카카오(상호명 검색 → 주소 검색) 우선 시도, 둘 다 실패하면 OSM(Nominatim)으로 폴백.
+// 카카오 쪽은 네트워크 문제여도 null로만 처리되므로, 최종 네트워크 실패 여부는 OSM 호출로 판단한다.
+async function resolveLocationBest(searchText){
+  const kakaoHit = await kakaoKeywordSearch(searchText) || await kakaoAddressSearch(searchText);
+  if(kakaoHit) return kakaoHit;
   return await geocodeAddress(searchText); // may throw on network failure
 }
 
@@ -1782,7 +1789,7 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
 
   if(!name){ toast('장소 이름을 입력해주세요'); goToStep(1); return; }
 
-  let lat=null, lng=null;
+  let lat=null, lng=null, note='';
   if(coordRaw){
     let coord=null, networkFailed=false;
     btn.disabled=true; btn.textContent='위치 찾는 중…';
@@ -1794,22 +1801,18 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
     btn.disabled=false; btn.textContent='✓ 추가 완료';
 
     if(networkFailed){
-      toast('위치 검색 서버에 연결하지 못했어요. 잠시 후 다시 시도하거나, 이름만 먼저 저장해보세요.');
-      return;
-    }
-    if(!coord){
+      note='위치 검색 서버에 연결하지 못해 이름만 먼저 저장했어요. 목록에서 나중에 좌표를 채워주세요.';
+    }else if(!coord){
       if(/maps\.app\.goo\.gl|goo\.gl\/maps/.test(coordRaw)){
-        toast('이 링크는 축약된 링크라 이름도 못 읽어요. 브라우저에서 한 번 열어 전체 주소를 복사해주세요.');
+        note='축약된 링크라 이름을 못 읽어서 위치 없이 저장했어요. 목록에서 전체 주소나 좌표를 다시 넣어주세요.';
       }else{
-        toast('위치를 찾지 못했어요. 주소를 더 정확히 적거나, 비워두면 이름만 먼저 저장돼요.');
+        note='위치를 찾지 못해 이름만 먼저 저장했어요. 목록에서 나중에 좌표를 채워주세요.';
       }
-      return;
+    }else if(coord[0]<33||coord[0]>34||coord[1]<125||coord[1]>128){
+      note='찾은 위치가 제주 지역을 벗어난 것 같아 위치 없이 저장했어요. 목록에서 다시 확인해주세요.';
+    }else{
+      lat=coord[0]; lng=coord[1];
     }
-    if(coord[0]<33||coord[0]>34||coord[1]<125||coord[1]>128){
-      toast('찾은 위치가 제주 지역 범위를 벗어난 것 같아요. 다시 확인해주세요.');
-      return;
-    }
-    lat=coord[0]; lng=coord[1];
   }
 
   profile.customPlaces.push({name,category:cat,lat,lng});
@@ -1818,7 +1821,7 @@ document.getElementById('addPlaceBtn').onclick=async ()=>{
   document.getElementById('placeCoord').value='';
   renderAll();
   goToStep(1);
-  toast(lat!==null ? '지도에 장소를 추가했습니다' : '이름만 저장했어요. 좌표는 나중에 추가할 수 있어요.');
+  toast(note || (lat!==null ? '지도에 장소를 추가했습니다' : '이름만 저장했어요. 좌표는 나중에 추가할 수 있어요.'));
 };
 document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jeju-3weeks-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('백업 파일을 만들었습니다')};
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
@@ -1827,6 +1830,7 @@ document.getElementById('resetBtn').onclick=()=>{if(confirm('이 브라우저에
 
 // ===== 카카오맵 실시간 장소 검색 (정확도순/거리순, 실제 페이지네이션) =====
 let kakaoPlacesService=null;
+let kakaoGeocoderService=null;
 let kakaoPagination=null;
 let kakaoSortMode='accuracy'; // 'accuracy' | 'distance'
 let kakaoUserLoc=null; // {lat,lng} 거리순일 때만 사용
@@ -1834,9 +1838,36 @@ console.log('window.kakao 존재 여부:', !!window.kakao, '/ window.kakao.maps 
 if(window.kakao&&window.kakao.maps){
  kakao.maps.load(()=>{
   try{kakaoPlacesService=new kakao.maps.services.Places();console.log('카카오 Places 서비스 초기화 성공')}catch(e){console.error('카카오 Places 서비스 초기화 실패:',e&&e.message)}
+  try{kakaoGeocoderService=new kakao.maps.services.Geocoder();console.log('카카오 Geocoder 서비스 초기화 성공')}catch(e){console.error('카카오 Geocoder 서비스 초기화 실패:',e&&e.message)}
  });
 }else{
  console.error('카카오 SDK 자체가 window.kakao로 등록되지 않음 (스크립트 로드 실패 가능성)');
+}
+// 카카오 키워드(상호명) 검색 — 음식점 등 업체명 찾기에 강함. 제주 지역(rect)으로 한정해 동명이인 오검색 방지.
+function kakaoKeywordSearch(query){
+ return new Promise(resolve=>{
+  if(!kakaoPlacesService){resolve(null);return}
+  try{
+   kakaoPlacesService.keywordSearch(query,(data,status)=>{
+    if(status===kakao.maps.services.Status.OK&&data&&data.length){
+     resolve([parseFloat(data[0].y),parseFloat(data[0].x)]);
+    }else resolve(null);
+   },{rect:'126.1,33.1,126.98,33.6'});
+  }catch(e){resolve(null)}
+ });
+}
+// 카카오 지번/도로명 주소 검색 — 정확한 주소 문자열 찾기에 강함.
+function kakaoAddressSearch(query){
+ return new Promise(resolve=>{
+  if(!kakaoGeocoderService){resolve(null);return}
+  try{
+   kakaoGeocoderService.addressSearch(query,(data,status)=>{
+    if(status===kakao.maps.services.Status.OK&&data&&data.length){
+     resolve([parseFloat(data[0].y),parseFloat(data[0].x)]);
+    }else resolve(null);
+   });
+  }catch(e){resolve(null)}
+ });
 }
 function kakaoRenderResults(data,isFirstPage){
  const list=document.getElementById('kakaoFoodResults');
