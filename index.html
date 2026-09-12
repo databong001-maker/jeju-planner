@@ -244,6 +244,15 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
       <div id="kakaoFoodResults" style="margin-top:10px"></div>
       <button class="btn hidden" id="kakaoFoodMoreBtn" type="button" style="width:100%;margin-top:8px">더보기</button>
     </div>
+    <div class="card" style="margin-top:12px">
+      <b>🤖 대화로 찾아서 추가하기</b>
+      <p class="small" style="margin:4px 0 10px">"OO 찾아서 추가해줘"처럼 편하게 말해보세요. 실제 AI가 아니라 이 앱 안에서 간단히 문장을 해석해 카카오맵 검색+추가를 대신 해주는 기능이에요.</p>
+      <div id="assistantChatLog" style="max-height:220px;overflow-y:auto;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px">
+        <input id="assistantChatInput" placeholder="예: 순옥이네명가 찾아서 추가해줘" style="flex:1">
+        <button class="btn primary" id="assistantChatSendBtn" type="button">보내기</button>
+      </div>
+    </div>
     <p class="small" style="margin:14px 0 8px">현재는 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인하세요.</p>
     <div id="foodStaticList"></div>
   </div>
@@ -1933,6 +1942,52 @@ function kakaoDoSearch(keyword){
   document.getElementById('kakaoFoodMoreBtn').classList.toggle('hidden',!pagination.hasNextPage);
  },opts);
 }
+// ===== "대화로 찾아서 추가하기" — 실제 AI 호출 없이, 문장에서 검색어/번호만 뽑아내는 간단한 도우미 =====
+let assistantPending=null; // {keyword, results:[{name,addr,lat,lng}]}
+function assistantAddMsg(role,text){
+ const log=document.getElementById('assistantChatLog');
+ const div=document.createElement('div');
+ div.style.margin='6px 0';div.style.textAlign=role==='user'?'right':'left';
+ div.innerHTML=`<span style="display:inline-block;max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;white-space:pre-wrap;background:${role==='user'?'var(--blue)':'#fff'};color:${role==='user'?'#fff':'inherit'};border:${role==='user'?'none':'1px solid var(--line)'}">${esc(text)}</span>`;
+ log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+function assistantExtractKeyword(msg){
+ return msg.replace(/찾아서\s*추가해\s*줘|검색해서\s*추가해\s*줘|찾아\s*줘|검색해\s*줘|추가해\s*줘|찾아서|추가해|해줘|좀|줘|\?|!/g,'').trim();
+}
+function assistantHandleMsg(msg){
+ assistantAddMsg('user',msg);
+ const numMatch=msg.match(/^\D*(\d+)\D*$/); // 순수하게 숫자 위주의 답변인지(선택 응답) 판별
+ if(assistantPending&&numMatch){
+  const idx=parseInt(numMatch[1],10)-1,item=assistantPending.results[idx];
+  if(!item){assistantAddMsg('bot',`${assistantPending.results.length}개 중에서 골라주세요. (1~${assistantPending.results.length})`);return}
+  profile.customPlaces.push({name:item.name,category:'food',lat:item.lat,lng:item.lng});
+  save();renderAll();
+  assistantAddMsg('bot',`✅ "${item.name}"을(를) 맛집으로 내 장소에 추가했어요! (카테고리를 바꾸려면 "내 장소" 목록에서 삭제 후 원하는 카테고리로 다시 추가해주세요)`);
+  assistantPending=null;
+  return;
+ }
+ const keyword=assistantExtractKeyword(msg);
+ if(!keyword){assistantAddMsg('bot','검색할 장소 이름을 알려주세요. 예: "돈사돈 찾아서 추가해줘"');return}
+ if(!kakaoPlacesService){assistantAddMsg('bot','카카오맵 연동이 아직 준비 중이에요. 잠시 후 다시 시도해주세요.');assistantPending=null;return}
+ assistantAddMsg('bot',`"${keyword}" 검색 중…`);
+ kakaoPlacesService.keywordSearch(keyword,(data,status)=>{
+  if(status!==kakao.maps.services.Status.OK||!data||!data.length){
+   assistantAddMsg('bot',`"${keyword}" 검색 결과가 없어요. 다른 이름으로 다시 말해주세요.`);
+   assistantPending=null;return;
+  }
+  const top=data.slice(0,5).map(d=>({name:d.place_name,addr:d.road_address_name||d.address_name||'',lat:parseFloat(d.y),lng:parseFloat(d.x)}));
+  assistantPending={keyword,results:top};
+  const listText=top.map((it,i)=>`${i+1}. ${it.name} — ${it.addr}`).join('\n');
+  assistantAddMsg('bot',`"${keyword}" 검색 결과예요:\n${listText}\n\n몇 번을 추가할까요? (숫자만 입력해주세요)`);
+ },{rect:'126.1,33.1,126.98,33.6'});
+}
+document.getElementById('assistantChatSendBtn').onclick=()=>{
+ const inp=document.getElementById('assistantChatInput'),msg=inp.value.trim();
+ if(!msg)return;
+ inp.value='';
+ assistantHandleMsg(msg);
+};
+document.getElementById('assistantChatInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('assistantChatSendBtn').click()}});
 document.getElementById('kakaoFoodSearchBtn').onclick=()=>{
  const kw=document.getElementById('kakaoFoodKeyword').value.trim();
  if(!kw){toast('검색어를 입력해주세요');return}
