@@ -64,6 +64,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 #courseDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#courseDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#courseDetailOverlay h3{margin:18px 0 8px}
 #galleryDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#galleryDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#galleryDetailOverlay h3{margin:18px 0 8px}
 #restaurantDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#restaurantDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#restaurantDetailOverlay h3{margin:18px 0 8px}
+#attractionDetailOverlay{position:fixed;inset:0;background:var(--stone);z-index:100;overflow-y:auto}#attractionDetailOverlay .inner{padding:16px;max-width:640px;margin:0 auto}#attractionDetailOverlay h3{margin:18px 0 8px}
 .detail-list{margin:0;padding-left:18px;font-size:12px;color:#4b473b;line-height:1.7}
 #authOverlay .box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px 20px;max-width:340px;width:100%}
 #authOverlay h1{font:600 22px Georgia,serif;margin:0 0 4px}
@@ -91,6 +92,12 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div class="inner">
     <button class="btn" id="restaurantDetailBack" type="button">← 뒤로</button>
     <div id="restaurantDetailContent" style="margin-top:12px"></div>
+  </div>
+</div>
+<div id="attractionDetailOverlay" class="hidden">
+  <div class="inner">
+    <button class="btn" id="attractionDetailBack" type="button">← 뒤로</button>
+    <div id="attractionDetailContent" style="margin-top:12px"></div>
   </div>
 </div>
 <div id="authOverlay">
@@ -125,12 +132,13 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 <nav id="tabs">
   <button class="active" data-tab="home">홈</button>
   <button data-tab="schedule" id="scheduleTabBtn">일정</button>
+  <button data-tab="transit">베이스</button>
+  <button data-tab="food">장소</button>
   <button data-tab="courses">올레길</button>
   <button data-tab="galleries">미술관</button>
   <button data-tab="restaurants">맛집</button>
+  <button data-tab="attractions">관광지</button>
   <button data-tab="map">지도</button>
-  <button data-tab="food">장소</button>
-  <button data-tab="transit">베이스</button>
   <button data-tab="notes">메모</button>
 </nav>
 
@@ -216,6 +224,12 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   <div id="restaurantList"></div>
 </section>
 
+<section id="attractions" class="section">
+  <h2 class="title">제주 관광지</h2><p class="sub">지역별 대표 관광지를 모아봤어요. 번호를 누르면 자세히 볼 수 있어요.</p>
+  <div class="banner">💡 초안 데이터입니다. 최신 운영정보는 방문 전 확인해주세요.</div>
+  <div id="attractionList"></div>
+</section>
+
 <section id="map" class="section">
   <h2 class="title">올레길 한눈에 보기</h2><p class="sub">실제 지도 데이터가 아닌 개념도입니다. 점을 누르면 코스를 확인할 수 있어요.</p>
   <div class="seg-tabs">
@@ -224,7 +238,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   </div>
   <div id="mapCourseView" style="margin-top:10px">
     <div class="legend">
-      <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span><span><i class="dot" style="background:var(--gallery);border-radius:2px;transform:rotate(45deg)"></i>미술관</span>
+      <span><i class="dot" style="background:var(--done)"></i>다녀옴</span><span><i class="dot" style="background:var(--blue)"></i>이번 여행</span><span><i class="dot" style="background:var(--red)"></i>미계획</span><span><i class="dot" style="background:var(--place)"></i>장소</span><span><i class="dot" style="background:var(--sight)"></i>관광지</span><span><i class="dot" style="background:var(--purple)"></i>숙소</span><span><i class="dot" style="background:var(--gallery);border-radius:2px;transform:rotate(45deg)"></i>미술관</span>
     </div>
     <select id="mapQuickFind" style="margin-top:10px;width:100%"><option value="">🔍 코스 · 미술관 빠르게 찾기</option></select>
     <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
@@ -275,8 +289,11 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   </div>
 
   <div id="placeViewSight" class="hidden" style="margin-top:10px">
-    <p class="sub" style="margin:0 0 10px">지역별 대표 관광지예요. 방문 전 최신 운영정보를 확인하세요.</p>
-    <div id="attractionStaticList"></div>
+    <p class="small">📷 지역별 대표 관광지 정보는 <b>상단 "관광지" 탭</b>에서 볼 수 있어요. 특정 관광지를 검색해 추가하려면 <b>🍽 맛집 탭의 카카오맵 실시간 검색</b>에서 검색 후 카테고리를 "관광지"로 선택해 추가해주세요.</p>
+    <div class="card">
+      <b>📍 내가 추가한 관광지</b>
+      <div id="myAttractionPreview" style="margin-top:8px"></div>
+    </div>
   </div>
 
   <div id="placeViewMine" class="hidden" style="margin-top:10px">
@@ -684,25 +701,20 @@ const attractionData=[
   {name:'월정리해변',desc:'카페거리와 어우러진 이국적인 해변',lat:33.5561,lng:126.7962}
  ]}
 ];
-const allAttractionItems=attractionData.flatMap(g=>g.items);
+let _attrCounter=0;
+const allAttractionItems=attractionData.flatMap(g=>g.items.map(it=>({...it,region:g.region,n:String(++_attrCounter)})));
 function getAllAttractionItems(){
  const custom=(profile.customPlaces||[]).filter(p=>p.category==='sight'&&p.lat!=null&&p.lng!=null).map(p=>({name:p.name,desc:'내가 추가한 관광지',lat:p.lat,lng:p.lng}));
  return allAttractionItems.concat(custom);
 }
-function renderAttractionsStatic(){
- const wrap=document.getElementById('attractionStaticList');if(!wrap)return;
- wrap.innerHTML=attractionData.map(g=>{
-  const items=g.items.map(it=>{
-   const segId='attr-'+it.name.replace(/\s+/g,'');
-   const tabsHtml=segTabsHtml(segId,[
-    {label:'🚗 길찾기',html:dirButtonsHtml(it.lat,it.lng,it.name)},
-    {label:'🚏 주변 정류장',html:nearbyStopsPanelHtml({lat:it.lat,lng:it.lng})}
-   ]);
-   return `<div style="margin-bottom:10px"><div class="item">${esc(it.name)} · ${esc(it.desc)}</div>${tabsHtml}</div>`;
-  }).join('');
-  return `<div class="food card"><h3>${esc(g.region)}</h3>${items}</div>`;
+function renderMyAttractionPreview(){
+ const wrap=document.getElementById('myAttractionPreview');if(!wrap)return;
+ const mine=(profile.customPlaces||[]).filter(p=>p.category==='sight');
+ if(!mine.length){wrap.innerHTML='<p class="small">아직 추가한 관광지가 없어요. 위에서 검색해 추가해보세요.</p>';return}
+ wrap.innerHTML=mine.map(p=>{
+  const tabsHtml=p.lat!=null?dirButtonsHtml(p.lat,p.lng,p.name):'';
+  return `<div style="margin-bottom:8px"><div class="item">📷 ${esc(p.name)}</div>${tabsHtml}</div>`;
  }).join('');
- wireSegTabs(wrap);
 }
 function renderMyFoodPreview(){
  const wrap=document.getElementById('myFoodPreview');if(!wrap)return;
@@ -971,10 +983,56 @@ function openRestaurantDetail(n){
 function closeRestaurantDetail(){
  document.getElementById('restaurantDetailOverlay').classList.add('hidden');
 }
-window.addEventListener('popstate',()=>{closeCourseDetail();closeGalleryDetail();closeRestaurantDetail()});
+function renderAttractions(){
+ const list=document.getElementById('attractionList');if(!list)return;
+ let html='',lastRegion=null;
+ allAttractionItems.forEach(it=>{
+  if(it.region!==lastRegion){html+=`<h3 style="margin:20px 0 8px">${esc(it.region)}</h3>`;lastRegion=it.region}
+  const id='attr-'+it.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+  html+=`<div class="course${done?' done':''}${planned?' planned':''}"><div class="num attraction-num" data-n="${esc(it.n)}" style="cursor:pointer;border-color:var(--sight);color:var(--sight)">${esc(it.n)}</div><div style="flex:1"><h3 class="attraction-title" data-n="${esc(it.n)}" style="cursor:pointer">${esc(it.name)}</h3><p class="desc">${esc(it.desc)}</p></div></div>`;
+ });
+ list.innerHTML=html;
+ list.querySelectorAll('.attraction-num,.attraction-title').forEach(el=>el.onclick=()=>openAttractionDetail(el.dataset.n));
+}
+function openAttractionDetail(n){
+ const f=allAttractionItems.find(x=>x.n===n);if(!f)return;
+ const id='attr-'+f.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
+ const mapUrl=`https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lng}`;
+ const stopsNear=findNearestBusStops(f.lat,f.lng,2);
+ const stopsHtml=stopsNear.length?stopsNear.map(stopCardHtml).join(''):'<p class="small">주변 정류장 정보가 없어요.</p>';
+ const nearCoursesArr=courses.map(c=>({item:c,dist:haversineKm(f.lat,f.lng,c.start[0],c.start[1])})).sort((a,b)=>a.dist-b.dist).slice(0,3);
+ const courseHtml=nearCoursesArr.map(x=>`<div class="item">올레 ${esc(x.item.n)} · ${esc(x.item.name)} (${x.dist.toFixed(1)}km)</div>`).join('');
+ const content=document.getElementById('attractionDetailContent');
+ content.innerHTML=`
+  <div class="num" style="width:44px;height:44px;font-size:16px;border-color:var(--sight);color:var(--sight)">${esc(f.n)}</div>
+  <h2 class="title" style="margin:10px 0 0">${esc(f.name)}</h2>
+  <div class="meta" style="margin:6px 0">${esc(f.region)}</div>
+  <p class="desc">${esc(f.desc)}</p>
+  <div class="actions">
+   <button class="btn blue" id="detailAttrPlanBtn" type="button">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button>
+   <button class="btn" id="detailAttrCheckBtn" type="button">${done?'✓ 다녀옴':'다녀옴 체크'}</button>
+   <a class="btn" href="${mapUrl}" target="_blank" rel="noopener">🌏 지도</a>
+  </div>
+  <h3>🥾 주변 올레코스</h3>
+  ${courseHtml||'<p class="small">주변 코스 정보가 없어요.</p>'}
+  <h3>🚏 주변 정류장</h3>
+  ${stopsHtml}
+ `;
+ wireArrivalButtons(content);
+ document.getElementById('detailAttrPlanBtn').onclick=()=>{toggle(profile.plan,id);save();renderAll();openAttractionDetail(n)};
+ document.getElementById('detailAttrCheckBtn').onclick=()=>{toggle(profile.done,id);save();renderAll();openAttractionDetail(n)};
+ document.getElementById('attractionDetailOverlay').classList.remove('hidden');
+ window.scrollTo({top:0});
+ if(!history.state||history.state.attractionDetail!==n)history.pushState({attractionDetail:n},'','#attr-'+n);
+}
+function closeAttractionDetail(){
+ document.getElementById('attractionDetailOverlay').classList.add('hidden');
+}
+window.addEventListener('popstate',()=>{closeCourseDetail();closeGalleryDetail();closeRestaurantDetail();closeAttractionDetail()});
 document.getElementById('courseDetailBack').onclick=()=>{history.back()};
 document.getElementById('galleryDetailBack').onclick=()=>{history.back()};
 document.getElementById('restaurantDetailBack').onclick=()=>{history.back()};
+document.getElementById('attractionDetailBack').onclick=()=>{history.back()};
 function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
  const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
@@ -1083,6 +1141,7 @@ function renderMap(){
  ring.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;seg+=`<line id="seg-${c.n}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>`;dots+=`<circle class="map-node" data-id="${c.n}" data-x="${x}" data-y="${y}" cx="${x}" cy="${y}" r="6" fill="var(--red)" stroke="#fff" stroke-width="1.2"/><text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
  branch.forEach(c=>{const a=project(...c.start),b=project(...c.end),x=(a[0]+b[0])/2,y=(a[1]+b[1])/2;dots+=`<circle class="map-node" data-id="${c.n}" data-x="${x}" data-y="${y}" cx="${x}" cy="${y}" r="5.5" fill="var(--red)" stroke="#fff" stroke-width="1.2"/><text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="5.5" fill="#fff" pointer-events="none">${esc(c.n)}</text>`});
  let extras='';allFoodItems.forEach(f=>{const [x,y]=project(f.lat,f.lng),id='food-'+f.n,done=profile.done.includes(id),planned=profile.plan.includes(id),col=done?'var(--done)':planned?'var(--blue)':'var(--place)';extras+=`<circle class="food-curated-node" data-id="${esc(f.n)}" data-x="${x}" data-y="${y}" cx="${x}" cy="${y}" r="6" fill="${col}" stroke="#fff" stroke-width="1.2"/><text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(f.n)}</text>`});
+ allAttractionItems.forEach(a=>{const [x,y]=project(a.lat,a.lng),id='attr-'+a.n,done=profile.done.includes(id),planned=profile.plan.includes(id),col=done?'var(--done)':planned?'var(--blue)':'var(--sight)';extras+=`<circle class="attraction-curated-node" data-id="${esc(a.n)}" data-x="${x}" data-y="${y}" cx="${x}" cy="${y}" r="6" fill="${col}" stroke="#fff" stroke-width="1.2"/><text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="6" fill="#fff" pointer-events="none">${esc(a.n)}</text>`});
  galleries.forEach(g=>{const [x,y]=project(g.loc[0],g.loc[1]),id='gallery-'+g.n,done=profile.done.includes(id),planned=profile.plan.includes(id),col=done?'var(--done)':planned?'var(--blue)':'var(--gallery)';extras+=`<g class="gallery-node" data-id="${esc(g.n)}" data-x="${x}" data-y="${y}"><path d="M${x} ${y+14} Q${x-12} ${y-2} ${x-10} ${y-11} A10 10 0 1 1 ${x+10} ${y-11} Q${x+12} ${y-2} ${x} ${y+14} Z" fill="${col}" stroke="#fff" stroke-width="2.5"/><text x="${x}" y="${y-8}" text-anchor="middle" font-size="13" fill="#fff" pointer-events="none">🎨</text></g>`});
  (profile.customPlaces||[]).forEach(p=>{if(p.lat===null||p.lat===undefined)return;const [x,y]=project(p.lat,p.lng),col=p.category==='sight'?'var(--sight)':p.category==='etc'?'var(--etc)':p.category==='stay'?'var(--purple)':'var(--place)';extras+=`<circle class="food-node" data-name="${esc(p.name)}" data-category="${esc(p.category||'food')}" data-x="${x}" data-y="${y}" cx="${x}" cy="${y}" r="5" fill="${col}" stroke="#fff"/>${p.category==='stay'?`<text x="${x}" y="${y+2.5}" text-anchor="middle" font-size="6" pointer-events="none">🏠</text>`:''}`});
  let stay='';
@@ -1098,6 +1157,7 @@ function renderMap(){
  wrap.querySelectorAll('.map-node').forEach(n=>n.onclick=()=>{const c=courses.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('course-'+c.n)?'✓ 다녀옴':'예정'} · 올레 ${c.n}코스 · ${c.name} · ${c.dist}`;pingAt(+n.dataset.x,+n.dataset.y)});
  wrap.querySelectorAll('.food-node').forEach(n=>{n.onclick=()=>{const ic=n.dataset.category==='sight'?'📷':n.dataset.category==='etc'?'📌':n.dataset.category==='stay'?'🏠':'🍽';document.getElementById('mapSelected').textContent=`${ic} ${n.dataset.name}`;pingAt(+n.dataset.x,+n.dataset.y)}});
  wrap.querySelectorAll('.food-curated-node').forEach(n=>n.onclick=()=>{const f=allFoodItems.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('food-'+f.n)?'✓ 다녀옴':'예정'} · 🍽 ${f.name} · ${f.region}`;pingAt(+n.dataset.x,+n.dataset.y)});
+ wrap.querySelectorAll('.attraction-curated-node').forEach(n=>n.onclick=()=>{const a=allAttractionItems.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('attr-'+a.n)?'✓ 다녀옴':'예정'} · 📷 ${a.name} · ${a.region}`;pingAt(+n.dataset.x,+n.dataset.y)});
  wrap.querySelectorAll('.gallery-node').forEach(n=>n.onclick=()=>{const g=galleries.find(x=>x.n===n.dataset.id);document.getElementById('mapSelected').textContent=`${profile.done.includes('gallery-'+g.n)?'✓ 다녀옴':'예정'} · 🎨 ${g.name} · ${g.area}`;pingAt(+n.dataset.x,+n.dataset.y)});
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>{document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`;pingAt(+s.dataset.x,+s.dataset.y)});
  courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'var(--done)':plan?'var(--blue)':'var(--red)';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
@@ -1633,7 +1693,7 @@ function renderTagNotes(){
   save();renderTagNotes();
  });
 }
-function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderGalleries();renderRestaurants();renderSchedule();renderMap();renderStayTab();renderStays();renderMyFoodPreview();renderAttractionsStatic();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
+function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderGalleries();renderRestaurants();renderAttractions();renderSchedule();renderMap();renderStayTab();renderStays();renderMyFoodPreview();renderMyAttractionPreview();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
 function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'});const activeBtn=document.querySelector(`#tabs button[data-tab="${id}"]`);if(activeBtn)activeBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -1642,7 +1702,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dat
  document.addEventListener('touchstart',e=>{
   if(e.touches.length!==1)return;
   const t=e.touches[0];
-  skip=!!(t.target.closest('#tabs')||(!document.getElementById('courseDetailOverlay').classList.contains('hidden'))||(!document.getElementById('galleryDetailOverlay').classList.contains('hidden'))||(!document.getElementById('restaurantDetailOverlay').classList.contains('hidden')));
+  skip=!!(t.target.closest('#tabs')||(!document.getElementById('courseDetailOverlay').classList.contains('hidden'))||(!document.getElementById('galleryDetailOverlay').classList.contains('hidden'))||(!document.getElementById('restaurantDetailOverlay').classList.contains('hidden'))||(!document.getElementById('attractionDetailOverlay').classList.contains('hidden')));
   sx=t.clientX;sy=t.clientY;st=Date.now();
  },{passive:true});
  document.addEventListener('touchend',e=>{
@@ -1663,6 +1723,7 @@ function initMapQuickFind(){
  addGroup('🥾 올레길',courses.map(c=>{const o=document.createElement('option');o.value='course:'+c.n;o.textContent=`올레 ${c.n} · ${c.name}`;return o}));
  addGroup('🎨 미술관',galleries.map(g=>{const o=document.createElement('option');o.value='gallery:'+g.n;o.textContent=g.name;return o}));
  addGroup('🍽 맛집',allFoodItems.map(f=>{const o=document.createElement('option');o.value='food:'+f.n;o.textContent=`${f.name} (${f.region})`;return o}));
+ addGroup('📷 관광지',allAttractionItems.map(a=>{const o=document.createElement('option');o.value='attr:'+a.n;o.textContent=`${a.name} (${a.region})`;return o}));
  const staysWithLoc=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null);
  addGroup('🏠 숙소',staysWithLoc.map((s,idx)=>{const o=document.createElement('option');o.value='stay:'+idx;o.textContent=s.name;return o}));
  const placesWithLoc=(profile.customPlaces||[]).filter(p=>p.lat!=null&&p.lng!=null);
@@ -1686,6 +1747,10 @@ function initMapQuickFind(){
     const f=allFoodItems.find(x=>x.n===idRaw);if(!f){sel.value='';return}
     node=document.querySelector(`.food-curated-node[data-id="${CSS.escape(idRaw)}"]`);
     text=`${profile.done.includes('food-'+f.n)?'✓ 다녀옴':'예정'} · 🍽 ${f.name} · ${f.region}`;
+   }else if(type==='attr'){
+    const a=allAttractionItems.find(x=>x.n===idRaw);if(!a){sel.value='';return}
+    node=document.querySelector(`.attraction-curated-node[data-id="${CSS.escape(idRaw)}"]`);
+    text=`${profile.done.includes('attr-'+a.n)?'✓ 다녀옴':'예정'} · 📷 ${a.name} · ${a.region}`;
    }else if(type==='stay'){
     const list=(profile.stays||[]).filter(s=>s.lat!=null&&s.lng!=null),s=list[+idRaw];if(!s){sel.value='';return}
     node=document.querySelector(`.stay-node[data-name="${CSS.escape(s.name)}"]`);
