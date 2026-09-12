@@ -1497,9 +1497,27 @@ function renderTagNotes(){
  });
 }
 function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderGalleries();renderSchedule();renderMap();renderStayTab();renderStays();renderFoodStatic();renderAttractionsStatic();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
-function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
+function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'});const activeBtn=document.querySelector(`#tabs button[data-tab="${id}"]`);if(activeBtn)activeBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+(function(){
+ let sx=0,sy=0,st=0,skip=false;
+ document.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1)return;
+  const t=e.touches[0];
+  skip=!!(t.target.closest('#tabs')||(!document.getElementById('courseDetailOverlay').classList.contains('hidden'))||(!document.getElementById('galleryDetailOverlay').classList.contains('hidden')));
+  sx=t.clientX;sy=t.clientY;st=Date.now();
+ },{passive:true});
+ document.addEventListener('touchend',e=>{
+  if(skip)return;
+  const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;
+  if(dt>700||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6)return;
+  const tabs=[...document.querySelectorAll('#tabs button')],i=tabs.findIndex(b=>b.classList.contains('active'));
+  if(i<0)return;
+  const next=dx<0?Math.min(tabs.length-1,i+1):Math.max(0,i-1);
+  if(next!==i)showTab(tabs[next].dataset.tab);
+ },{passive:true});
+})();
 document.getElementById('mapViewCourseBtn').onclick=()=>{
  document.getElementById('mapViewCourseBtn').classList.add('active-seg');
  document.getElementById('mapViewTimelineBtn').classList.remove('active-seg');
