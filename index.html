@@ -323,10 +323,14 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
         <div><label>체크인</label><input type="date" id="stayCheckin"></div>
         <div><label>체크아웃</label><input type="date" id="stayCheckout"></div>
       </div>
-      <label>주소, 숙소 이름, 또는 구글맵 링크</label>
-      <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
-      <button class="btn green" id="stayMapSearchBtn" type="button" style="width:100%;margin:9px 0">🔍 구글맵에서 검색</button>
-      <p class="small">위 버튼을 누르면 입력한 이름/주소로 구글맵 검색이 새 탭에서 열려요. 원하는 장소를 찾으면 <b>공유 → 링크 복사</b> 후 이 입력창에 붙여넣어주세요. 주소나 이름을 그냥 적어도 자동으로 위치를 찾아요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
+      <label>숙소 이름 또는 주소로 검색</label>
+      <div style="display:flex;gap:6px">
+        <input id="stayLocation" placeholder="예: 제주시 노형동 ○○호텔">
+        <button class="btn primary" id="staySearchBtn" type="button" style="flex-shrink:0">🔍 검색</button>
+      </div>
+      <div id="staySearchResults" style="margin-top:8px"></div>
+      <input type="hidden" id="stayLat"><input type="hidden" id="stayLng">
+      <p class="small" id="stayLocHint">카카오맵 검색 결과에서 골라주시면 위치가 정확하게 저장돼요. 검색으로 못 찾으면 주소를 직접 입력해도 자동으로 위치를 찾아봐요. 비워두면 이름과 날짜만 먼저 저장되고, 나중에 채울 수 있어요.</p>
       <input type="hidden" id="stayEditId">
       <div class="actions" style="margin-top:8px">
         <button class="btn" id="cancelStayBtn" type="button">취소</button>
@@ -1312,6 +1316,8 @@ function openStayForm(editId){
  const form=document.getElementById('stayForm');
  form.classList.remove('hidden');
  document.getElementById('stayEditId').value=editId||'';
+ document.getElementById('staySearchResults').innerHTML='';
+ document.getElementById('stayLat').value='';document.getElementById('stayLng').value='';
  if(editId){
   const s=(profile.stays||[]).find(x=>x.id===editId);
   if(s){
@@ -1331,11 +1337,36 @@ function openStayForm(editId){
 function closeStayForm(){document.getElementById('stayForm').classList.add('hidden')}
 document.getElementById('addStayBtn').onclick=()=>openStayForm(null);
 document.getElementById('cancelStayBtn').onclick=()=>closeStayForm();
-document.getElementById('stayMapSearchBtn').onclick=()=>{
- const locText=document.getElementById('stayLocation').value.trim();
- const name=document.getElementById('stayName').value.trim();
- const q=encodeURIComponent((locText||name||'')+' 제주');
- window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
+document.getElementById('stayLocation').addEventListener('input',()=>{
+ document.getElementById('stayLat').value='';document.getElementById('stayLng').value='';
+});
+document.getElementById('staySearchBtn').onclick=()=>{
+ const q=document.getElementById('stayLocation').value.trim();
+ const resDiv=document.getElementById('staySearchResults');
+ if(!q){toast('검색어를 입력해주세요');return}
+ if(!kakaoPlacesService){toast('카카오맵 연동 준비 중이에요. 잠시 후 다시 시도해주세요.');return}
+ resDiv.innerHTML='<p class="small"><span class="spinner"></span>검색 중…</p>';
+ kakaoPlacesService.keywordSearch(q,(data,status)=>{
+  if(status!==kakao.maps.services.Status.OK||!data||!data.length){
+   resDiv.innerHTML='<p class="small">검색 결과가 없어요. 주소를 직접 입력해서 저장해도 자동으로 위치를 찾아봐요.</p>';return;
+  }
+  resDiv.innerHTML='';
+  data.slice(0,5).forEach(place=>{
+   const lat=parseFloat(place.y),lng=parseFloat(place.x);
+   const div=document.createElement('div');
+   div.className='course';
+   div.style.padding='10px';
+   div.innerHTML=`<div style="flex:1"><h3 style="font-size:14px">${esc(place.place_name)}</h3><div class="meta">${esc(place.road_address_name||place.address_name||'')}</div><button class="btn primary pickStayBtn" type="button" style="margin-top:6px">✓ 이 위치로 선택</button></div>`;
+   div.querySelector('.pickStayBtn').onclick=()=>{
+    document.getElementById('stayLocation').value=place.place_name;
+    document.getElementById('stayLat').value=lat;
+    document.getElementById('stayLng').value=lng;
+    if(!document.getElementById('stayName').value.trim())document.getElementById('stayName').value=place.place_name;
+    resDiv.innerHTML=`<p class="small" style="color:var(--sea)">✓ "${esc(place.place_name)}" 위치를 선택했어요</p>`;
+   };
+   resDiv.appendChild(div);
+  });
+ },{rect:'126.1,33.1,126.98,33.6'});
 };
 document.getElementById('saveStayBtn').onclick=async()=>{
  const editId=document.getElementById('stayEditId').value||null;
@@ -1343,6 +1374,7 @@ document.getElementById('saveStayBtn').onclick=async()=>{
  const checkin=document.getElementById('stayCheckin').value;
  const checkout=document.getElementById('stayCheckout').value;
  const locRaw=document.getElementById('stayLocation').value.trim();
+ const pickedLat=document.getElementById('stayLat').value,pickedLng=document.getElementById('stayLng').value;
  const btn=document.getElementById('saveStayBtn');
 
  if(!checkin||!checkout){toast('체크인/체크아웃 날짜를 입력해주세요');return}
@@ -1350,7 +1382,9 @@ document.getElementById('saveStayBtn').onclick=async()=>{
 
  let lat=null,lng=null;
  if(editId){const prev=(profile.stays||[]).find(x=>x.id===editId);if(prev){lat=prev.lat??null;lng=prev.lng??null}}
- if(locRaw){
+ if(pickedLat&&pickedLng){
+  lat=parseFloat(pickedLat);lng=parseFloat(pickedLng);
+ }else if(locRaw){
   btn.disabled=true;btn.textContent='위치 찾는 중…';
   try{
    const coord=await resolveLocation(locRaw);
