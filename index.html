@@ -162,6 +162,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center"><b id="statPlan" style="font-size:21px;color:var(--blue)">0</b><div class="small" style="margin-top:2px">이번 여행 계획</div></div>
   </div>
   <p class="small hidden" id="progressText"></p>
+  <p class="small" id="otherStats" style="margin:-4px 0 10px"></p>
   <div class="card" id="periodCard">
     <b>제주살이 기간</b>
     <label for="departureDate">시작일</label><input type="date" id="departureDate">
@@ -220,13 +221,13 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
 
 <section id="restaurants" class="section">
   <h2 class="title">제주 맛집</h2><p class="sub">지역별 대표 먹거리를 모아봤어요. 번호를 누르면 자세히 볼 수 있어요.</p>
-  <div class="banner">💡 초안 데이터입니다. 정확한 상호·영업시간은 방문 전 확인해주세요. 특정 맛집을 콕 집어 찾고 싶다면 <b>장소 탭 → 맛집</b>의 카카오맵 실시간 검색을 이용해주세요.</div>
+  <div class="banner">💡 대부분 "지역 스타일" 소개(예: 방어회거리)이지 특정 상호를 검증한 정보는 아니에요. 상호 하나만 오류를 확인해 고쳤어요(노형동 코시롱). 특정 맛집을 콕 집어 찾고 싶다면 <b>장소 탭 → 맛집</b>의 카카오맵 실시간 검색을 이용해주세요.</div>
   <div id="restaurantList"></div>
 </section>
 
 <section id="attractions" class="section">
   <h2 class="title">제주 관광지</h2><p class="sub">지역별 대표 관광지를 모아봤어요. 번호를 누르면 자세히 볼 수 있어요.</p>
-  <div class="banner">💡 초안 데이터입니다. 최신 운영정보는 방문 전 확인해주세요.</div>
+  <div class="banner">💡 대부분 실제 존재하는 유명 자연명소예요. 입장료가 있는 3곳(성산일출봉·한림공원·만장굴)은 웹검색으로 확인해 반영했고, 나머지는 무료 자연경관이라 별도 확인이 크게 필요 없어요. 요금은 자주 바뀌니 방문 전 최종 확인해주세요.</div>
   <div id="attractionList"></div>
 </section>
 
@@ -587,7 +588,7 @@ const courseDetails={
 const galleriesRaw=[
 ['1','제주도립미술관','제주시 연동','제주도가 운영하는 대표 공립 미술관. 넓은 잔디밭과 함께 제주 자연을 담은 상설전·기획전을 볼 수 있어요.','33.4670,126.4830'],
 ['2','제주현대미술관','한경면 저지리','저지문화예술인마을 안에 있는 도립 미술관으로, 현대미술 상설·기획전과 함께 조각공원을 산책할 수 있어요.','33.3226,126.2536'],
-['3','김창열미술관','한경면 저지리','제주현대미술관과 같은 저지문화예술인마을 부지에 있는 미술관으로, "물방울 화가" 김창열 화백의 작품을 상설 전시해요.','33.3222,126.2540'],
+['3','김창열미술관','한경면 용금로','제주현대미술관과 같은 저지문화예술인마을 문화지구 내에 있는 미술관으로, "물방울 화가" 김창열 화백의 작품을 상설 전시해요.','33.3222,126.2540'],
 ['4','아라리오뮤지엄','제주시 원도심(탑동)','옛 극장·모텔 건물을 개조해 만든 현대미술관으로, 탑동·동문시장과 가까워 원도심 산책과 함께 들르기 좋아요.','33.5147,126.5219'],
 ['5','이중섭미술관','서귀포시 이중섭거리','화가 이중섭이 피란 시절 머물렀던 곳 인근에 세워진 미술관으로, 이중섭거리·이중섭 거주지와 함께 둘러보기 좋아요.','33.2489,126.5628'],
 ['6','기당미술관','서귀포시 서홍동','제주 최초의 시립미술관으로, 재일교포 화가 변시지 화백의 제주 풍경화를 중심으로 전시해요.','33.2465,126.5580'],
@@ -602,20 +603,20 @@ const galleriesRaw=[
 ];
 const galleries=galleriesRaw.map(x=>({n:x[0],name:x[1],area:x[2],desc:x[3],loc:x[4].split(',').map(Number)}));
 const galleryDetails={
- '1':{addr:'제주시 1100로 2894-78',hours:'09:00~18:00(월요일 휴관, 계절별 변동 가능)',fee:'상설전 무료 · 기획전 별도',parking:'미술관 내 주차장',contact:'064-710-4300',highlights:[{name:'잔디마당·야외조각',desc:'미술관 앞 넓은 잔디마당에서 조각 작품과 함께 쉬어가기 좋아요.'}]},
- '2':{addr:'제주시 한경면 저지14길 35',hours:'09:00~18:00(월요일 휴관)',fee:'유료(할인 대상 있음)',parking:'미술관 내 주차장',contact:'064-710-7801',highlights:[{name:'조각공원',desc:'야외 조각공원을 함께 산책할 수 있어요.'},{name:'저지문화예술인마을',desc:'주변에 여러 작가 갤러리가 모여 있어요.'}]},
- '3':{addr:'제주시 한경면 저지14길 35(제주현대미술관 인근)',hours:'09:00~18:00(월요일 휴관)',fee:'유료',parking:'인근 공용 주차장',contact:'064-710-7801',highlights:[{name:'물방울 연작',desc:'김창열 화백의 대표작인 물방울 그림들을 모아 전시해요.'}]},
- '4':{addr:'제주시 탑동로11길 4',hours:'10:00~19:00(요일별 변동 가능)',fee:'유료',parking:'전용 주차장 협소, 원도심 공영주차장 이용 권장',contact:'064-720-8202',highlights:[{name:'옛 건물 리모델링',desc:'극장·모텔 등 여러 건물을 개조해 전시장으로 써서 공간 자체가 특색 있어요.'},{name:'탑동·동문시장',desc:'도보로 원도심 구경과 함께 묶기 좋아요.'}]},
- '5':{addr:'서귀포시 이중섭로 27-3',hours:'09:00~18:00(월요일 휴관)',fee:'유료(소액)',parking:'인근 공영주차장',contact:'064-760-3567',highlights:[{name:'이중섭거리·거주지',desc:'미술관 주변 골목이 이중섭 화가가 실제 머물던 거리예요.'}]},
- '6':{addr:'서귀포시 남성중로153번길 15',hours:'09:00~18:00(월요일 휴관)',fee:'유료(소액)',parking:'미술관 내 주차장',contact:'064-733-1861',highlights:[{name:'변시지 화백 작품',desc:'제주 바람과 풍경을 담은 독특한 화풍의 작품을 볼 수 있어요.'}]},
- '7':{addr:'서귀포시 서귀동(서귀포 원도심)',hours:'09:00~18:00(월요일 휴관)',fee:'무료',parking:'인근 공영주차장',contact:'064-760-3611',highlights:[{name:'서예 작품',desc:'소암 현중화 선생의 서예 작품을 조용히 감상할 수 있어요.'}]},
- '8':{addr:'서귀포시 안덕면 산록남로762번길 69',hours:'10:00~18:00(연중무휴, 변동 가능)',fee:'유료',parking:'박물관 내 주차장',contact:'064-792-8108',highlights:[{name:'안도 다다오 건축',desc:'노출 콘크리트와 물, 빛을 활용한 건축 자체가 볼거리예요.'},{name:'전통 공예 컬렉션',desc:'조각보·소반 등 한국 전통 공예품을 함께 전시해요.'}]},
- '9':{addr:'서귀포시 안덕면 산록남로 675',hours:'10:00~18:00(화요일 휴관 등 변동 가능)',fee:'유료',parking:'미술관 내 주차장',contact:'064-794-9096',highlights:[{name:'기획전 위주',desc:'고정 소장품보다 시의성 있는 기획전을 자주 선보여요.'}]},
- '10':{addr:'서귀포시 칠십리로214번길 30',hours:'09:00~18:00(연중무휴, 변동 가능)',fee:'유료',parking:'미술관 내 주차장',contact:'064-763-3600',highlights:[{name:'옥상 정원',desc:'서귀포 앞바다와 섶섬 전망을 함께 즐길 수 있어요.'}]},
- '11':{addr:'서귀포시 성산읍 삼달로 137',hours:'09:30~18:00(계절별 변동, 목요일 휴관 등)',fee:'유료(소액)',parking:'갤러리 내 주차장',contact:'064-784-9907',highlights:[{name:'폐교 리모델링',desc:'옛 삼달분교를 개조한 공간으로 정원과 사진이 함께 어우러져요.'},{name:'제주 오름 사진',desc:'평생 제주 오름과 풍경을 찍은 사진작가의 대표작들을 볼 수 있어요.'}]},
- '12':{addr:'서귀포시 성산읍 고성리(빛의벙커로 검색)',hours:'10:00~19:00(연중무휴, 변동 가능)',fee:'유료',parking:'전시관 내 주차장',contact:'1522-2653',highlights:[{name:'몰입형 미디어아트',desc:'명화 이미지를 벽면 가득 투사해 음악과 함께 감상하는 방식이에요.'},{name:'옛 국가 통신시설',desc:'지하 벙커였던 공간을 그대로 활용해 독특한 분위기를 만들어요.'}]},
- '13':{addr:'서귀포시 성산읍 섭지코지로 107',hours:'09:00~18:00(연중무휴, 변동 가능)',fee:'유료(소액)',parking:'섭지코지 내 주차장',contact:'064-731-7791',highlights:[{name:'안도 다다오 건축',desc:'유민미술관도 본태박물관과 같은 건축가가 설계했어요.'},{name:'섭지코지 산책',desc:'미술관 관람 전후로 섭지코지 해안 산책로를 함께 걷기 좋아요.'}]},
- '14':{addr:'제주시 우도면(우도 내)',hours:'09:00~18:00(계절별 변동 가능)',fee:'유료',parking:'우도 내 주차 공간',contact:'064-799-0002',highlights:[{name:'훈데르트바서 건축',desc:'곡선과 원색이 두드러지는 독특한 건축 양식을 체험할 수 있어요.'},{name:'우도 올레와 연계',desc:'우도 올레(1-1코스) 걷기와 함께 묶어 일정을 짜기 좋아요.'}]}
+ '1':{addr:'제주시 1100로 2894-78',hours:'09:00~18:00, 매주 월요일 휴관',fee:'상설전 무료 · 기획전 1,000~3,000원',parking:'미술관 내 무료 주차장',contact:'064-710-4300',highlights:[{name:'잔디마당·야외조각',desc:'미술관 앞 넓은 잔디마당에서 조각 작품과 함께 쉬어가기 좋아요.'}],verified:'2026-09 검색 확인'},
+ '2':{addr:'제주시 한경면 저지14길 35',hours:'09:00~18:00, 매주 월요일 휴관',fee:'유료(성인 2,000원·청소년군인 1,000원·어린이 500원, 6세이하·65세이상 무료)',parking:'미술관 내 주차장',contact:'064-710-7801',highlights:[{name:'조각공원',desc:'야외 조각공원을 함께 산책할 수 있어요.'},{name:'저지문화예술인마을',desc:'주변에 여러 작가 갤러리가 모여 있어요.'}],verified:'2026-09 검색 확인'},
+ '3':{addr:'제주시 한경면 용금로 883-5',hours:'09:00~18:00(입장마감 17:30), 매주 월요일(공휴일이면 다음날)·1월1일·설날·추석 휴관',fee:'유료(성인 2,000원·청소년군인 1,000원·어린이 500원)',parking:'미술관 내 주차장',contact:'064-710-4150',highlights:[{name:'물방울 연작',desc:'김창열 화백의 대표작인 물방울 그림들을 모아 전시해요.'}],verified:'2026-09 검색 확인(주소·전화번호가 저지14길이 아니라 용금로였음 — 수정)'},
+ '4':{addr:'제주시 탑동로 14',hours:'10:00~19:00(마지막 입장 18:00), 매주 월요일 휴관',fee:'유료',parking:'전용 주차장 협소, 원도심 공영주차장 이용 권장',contact:'064-720-8202',highlights:[{name:'옛 건물 리모델링',desc:'극장·모텔 등 여러 건물을 개조해 전시장으로 써서 공간 자체가 특색 있어요.'},{name:'탑동·동문시장',desc:'도보로 원도심 구경과 함께 묶기 좋아요.'}],verified:'2026-09 검색 확인(주소 수정)'},
+ '5':{addr:'서귀포시 이중섭로 27-3',hours:'09:00~18:00(7~9월 09:00~20:00), 매주 월요일·1월1일·설날·추석 휴관',fee:'유료(소액)',parking:'인근 공영주차장',contact:'064-760-3567',highlights:[{name:'이중섭거리·거주지',desc:'미술관 주변 골목이 이중섭 화가가 실제 머물던 거리예요.'}],verified:'2026-09 검색 확인'},
+ '6':{addr:'서귀포시 남성중로153번길 15',hours:'09:00~18:00(7~9월 20:00까지), 매주 월요일·1월1일·설날·추석 휴관',fee:'유료(소액)',parking:'미술관 내 주차장',contact:'064-733-1586',highlights:[{name:'변시지 화백 작품',desc:'제주 바람과 풍경을 담은 독특한 화풍의 작품을 볼 수 있어요.'}],verified:'2026-09 검색 확인(전화번호 수정)'},
+ '7':{addr:'서귀포시 소암로 15(서귀동)',hours:'09:00~18:00, 매주 월요일·1월1일·설날·추석 휴관',fee:'무료',parking:'인근 공영주차장',contact:'064-760-3511',highlights:[{name:'서예 작품',desc:'소암 현중화 선생의 서예 작품을 조용히 감상할 수 있어요.'}],verified:'2026-09 검색 확인(주소·전화번호 수정)'},
+ '8':{addr:'서귀포시 안덕면 산록남로762번길 69',hours:'10:00~18:00(입장마감 17:00), 연중무휴',fee:'유료(성인 2만원 내외)',parking:'박물관 내 주차장',contact:'064-792-8108',highlights:[{name:'안도 다다오 건축',desc:'노출 콘크리트와 물, 빛을 활용한 건축 자체가 볼거리예요.'},{name:'전통 공예 컬렉션',desc:'조각보·소반 등 한국 전통 공예품을 함께 전시해요.'}],verified:'2026-09 검색 확인'},
+ '9':{addr:'서귀포시 안덕면 산록남로 788',hours:'10:00~18:00, 매주 화요일 휴관',fee:'유료(성인 10,000원·어린이청소년 6,000원, 도민 할인)',parking:'미술관 내 주차장',contact:'064-794-9096',highlights:[{name:'기획전 위주',desc:'고정 소장품보다 시의성 있는 기획전을 자주 선보여요.'}],verified:'2026-09 검색 확인(주소 수정)'},
+ '10':{addr:'서귀포시 칠십리로214번길 30',hours:'10:00~18:00(17:30까지 입장), 매주 월요일 휴관',fee:'유료(성인 10,000원·청소년어린이 6,000원)',parking:'미술관 내 주차장',contact:'064-763-3600',highlights:[{name:'옥상 정원',desc:'서귀포 앞바다와 섶섬 전망을 함께 즐길 수 있어요.'}],verified:'2026-09 검색 확인(운영시간 수정)'},
+ '11':{addr:'서귀포시 성산읍 삼달로 137',hours:'09:30~18:00(폐장 30분 전 매표마감, 여름 18:30·겨울 17:00까지), 정기휴무일 있음',fee:'유료(성인 5,000원 내외)',parking:'갤러리 내 주차장',contact:'064-784-9907',highlights:[{name:'폐교 리모델링',desc:'옛 삼달분교를 개조한 공간으로 정원과 사진이 함께 어우러져요.'},{name:'제주 오름 사진',desc:'평생 제주 오름과 풍경을 찍은 사진작가의 대표작들을 볼 수 있어요.'}],verified:'2026-09 검색 확인(정기휴무 요일은 자료마다 달라 홈페이지 확인 필요)'},
+ '12':{addr:'서귀포시 성산읍 서성일로1168번길 89-17',hours:'10:00~19:00(4~9월)·10:00~18:00(10~3월), 연중무휴',fee:'유료(성인 18,000~19,000원 선, 전시별 상이)',parking:'전시관 내 주차장',contact:'1522-2653',highlights:[{name:'몰입형 미디어아트',desc:'명화 이미지를 벽면 가득 투사해 음악과 함께 감상하는 방식이에요.'},{name:'옛 국가 통신시설',desc:'지하 벙커였던 공간을 그대로 활용해 독특한 분위기를 만들어요.'}],verified:'2026-09 검색 확인(주소 수정)'},
+ '13':{addr:'서귀포시 성산읍 섭지코지로 107',hours:'09:00~18:00(7~8월 20:00까지), 매주 화요일 휴관',fee:'유료(성인 12,000원 내외)',parking:'섭지코지 내 주차장',contact:'064-731-7791',highlights:[{name:'안도 다다오 건축',desc:'유민미술관도 본태박물관과 같은 건축가가 설계했어요.'},{name:'섭지코지 산책',desc:'미술관 관람 전후로 섭지코지 해안 산책로를 함께 걷기 좋아요.'}],verified:'2026-09 검색 확인(휴관일 수정: 화요일)'},
+ '14':{addr:'제주시 우도면 우도해안길 32-12',hours:'09:00~18:00 안팎(입장마감 17:00), 연중무휴',fee:'유료(중학생~성인 9,900원·36개월~초등학생 6,000원)',parking:'우도 내 주차 공간',contact:'064-766-6000',highlights:[{name:'훈데르트바서 건축',desc:'곡선과 원색이 두드러지는 독특한 건축 양식을 체험할 수 있어요.'},{name:'우도 올레와 연계',desc:'우도 올레(1-1코스) 걷기와 함께 묶어 일정을 짜기 좋아요.'}],verified:'2026-09 검색 확인'}
 };
 const level={lo:'하',mid:'중',hi:'상'};
 const RING=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21'];
@@ -650,7 +651,7 @@ const localFoodData=[
  {region:'제주시 원도심 · 노형',items:[
   {name:'동문시장 해산물 식당',desc:'갈치조림·구이, 고등어회',lat:33.5138,lng:126.5292},
   {name:'동문시장 오란다·과즐',desc:'시장 간식',lat:33.5140,lng:126.5296},
-  {name:'노형동 코시롱',desc:'흑돼지 한정식',lat:33.4869,lng:126.4783}
+  {name:'노형동 코시롱',desc:'보말칼국수·비빔밥 등 제주 향토음식',lat:33.4869,lng:126.4783}
  ]},
  {region:'조천 · 구좌 (동북부)',items:[
   {name:'함덕서우봉해변 카페거리',desc:'에메랄드빛 해변 뷰 카페',lat:33.5432,lng:126.6698},
@@ -662,7 +663,7 @@ let _foodCounter=0;
 const allFoodItems=localFoodData.flatMap(g=>g.items.map(it=>({...it,region:g.region,n:String(++_foodCounter)})));
 const attractionData=[
  {region:'성산 · 표선 (동부)',items:[
-  {name:'성산일출봉',desc:'유네스코 세계자연유산. 일출 명소로 유명한 화산 응회구',lat:33.4587,lng:126.9425},
+  {name:'성산일출봉',desc:'유네스코 세계자연유산. 일출 명소로 유명한 화산 응회구',lat:33.4587,lng:126.9425,hours:'07:00~19:00(매표마감 17:50)',fee:'성인 5,000원·청소년군인어린이 2,500원(제주도민 무료)',verified:'2026-09 검색 확인'},
   {name:'섭지코지',desc:'해안 절벽과 등대가 있는 드라마 촬영지',lat:33.4238,lng:126.9271},
   {name:'표선해수욕장',desc:'썰물 때 넓은 백사장이 드러나는 얕은 바다',lat:33.3255,lng:126.8367}
  ]},
@@ -683,7 +684,7 @@ const attractionData=[
  ]},
  {region:'한경 · 한림',items:[
   {name:'협재해수욕장',desc:'에메랄드빛 바다와 비양도 전망이 유명한 해변',lat:33.3941,lng:126.2397},
-  {name:'한림공원',desc:'용암동굴과 아열대 식물원이 있는 테마파크',lat:33.3944,lng:126.2500},
+  {name:'한림공원',desc:'용암동굴과 아열대 식물원이 있는 테마파크',lat:33.3944,lng:126.2500,hours:'09:00~18:00 안팎(계절별 변동)',fee:'성인 15,000원 내외(할인 대상 있음)',verified:'2026-09 검색 확인(요금은 변동 잦으니 방문 전 재확인 권장)'},
   {name:'수월봉',desc:'화산재 지층이 드러난 해안 절벽, 지질트레일',lat:33.3011,lng:126.1636}
  ]},
  {region:'애월',items:[
@@ -697,7 +698,7 @@ const attractionData=[
  ]},
  {region:'조천 · 구좌',items:[
   {name:'함덕서우봉해변',desc:'에메랄드빛 물빛으로 유명한 제주 대표 해변',lat:33.5432,lng:126.6698},
-  {name:'만장굴',desc:'세계자연유산에 등재된 대형 용암동굴',lat:33.5286,lng:126.7719},
+  {name:'만장굴',desc:'세계자연유산에 등재된 대형 용암동굴. 2023년말 낙석사고로 휴관했다가 2026년 5월 정비를 마치고 재개방됨',lat:33.5286,lng:126.7719,hours:'09:00~18:00 안팎(입장마감 17:00 전후)',fee:'유료(성인 4,000원 내외, 2019년 기준)',verified:'2026-09 검색 확인 — 2026.5.30 재개방, 정확한 요금은 인상됐을 수 있어 방문 전 확인 필요'},
   {name:'월정리해변',desc:'카페거리와 어우러진 이국적인 해변',lat:33.5561,lng:126.7962}
  ]}
 ];
@@ -892,7 +893,7 @@ function openGalleryDetail(n){
  const id='gallery-'+g.n,done=profile.done.includes(id),planned=profile.plan.includes(id);
  const mapUrl=`https://www.google.com/maps/search/?api=1&query=${g.loc.join(',')}`;
  const gd=galleryDetails[g.n];
- const infoHtml=gd?`<h3>🧭 안내 정보</h3><ul class="detail-list">${gd.addr?`<li>주소: ${esc(gd.addr)}</li>`:''}${gd.hours?`<li>운영시간: ${esc(gd.hours)}</li>`:''}${gd.fee?`<li>입장료: ${esc(gd.fee)}</li>`:''}${gd.parking?`<li>주차: ${esc(gd.parking)}</li>`:''}${gd.contact?`<li>문의: ${esc(gd.contact)}</li>`:''}</ul>`:'';
+ const infoHtml=gd?`<h3>🧭 안내 정보</h3><ul class="detail-list">${gd.addr?`<li>주소: ${esc(gd.addr)}</li>`:''}${gd.hours?`<li>운영시간: ${esc(gd.hours)}</li>`:''}${gd.fee?`<li>입장료: ${esc(gd.fee)}</li>`:''}${gd.parking?`<li>주차: ${esc(gd.parking)}</li>`:''}${gd.contact?`<li>문의: ${esc(gd.contact)}</li>`:''}</ul>${gd.verified?`<p class="small">🔎 ${esc(gd.verified)}</p>`:''}`:'';
  const highlightHtml=gd&&gd.highlights&&gd.highlights.length?`<h3>👀 볼거리</h3><ul class="detail-list">${gd.highlights.map(h=>`<li><b>${esc(h.name)}</b>: ${esc(h.desc)}</li>`).join('')}</ul>`:'';
  const nearCourses=courses.map(c=>({item:c,dist:haversineKm(g.loc[0],g.loc[1],c.start[0],c.start[1])})).sort((a,b)=>a.dist-b.dist).slice(0,3);
  const courseHtml=nearCourses.length?nearCourses.map(x=>`<div class="item">올레 ${esc(x.item.n)} · ${esc(x.item.name)} (${x.dist.toFixed(1)}km)</div>`).join(''):'<p class="small">주변 올레코스 정보가 없어요.</p>';
@@ -1008,6 +1009,7 @@ function openAttractionDetail(n){
   <h2 class="title" style="margin:10px 0 0">${esc(f.name)}</h2>
   <div class="meta" style="margin:6px 0">${esc(f.region)}</div>
   <p class="desc">${esc(f.desc)}</p>
+  ${(f.hours||f.fee)?`<ul class="detail-list">${f.hours?`<li>운영시간: ${esc(f.hours)}</li>`:''}${f.fee?`<li>입장료: ${esc(f.fee)}</li>`:''}</ul>${f.verified?`<p class="small">🔎 ${esc(f.verified)}</p>`:''}`:'<p class="small">별도 입장료·운영시간이 없는 자연 명소예요.</p>'}
   <div class="actions">
    <button class="btn blue" id="detailAttrPlanBtn" type="button">${planned?'✓ 이번 여행':'🗺 이번 여행에 추가'}</button>
    <button class="btn" id="detailAttrCheckBtn" type="button">${done?'✓ 다녀옴':'다녀옴 체크'}</button>
@@ -1035,14 +1037,17 @@ document.getElementById('restaurantDetailBack').onclick=()=>{history.back()};
 document.getElementById('attractionDetailBack').onclick=()=>{history.back()};
 function toggle(a,v){const i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1)}
 function renderHome(){
- const done=profile.done.length,plan=profile.plan.length,p=Math.round(done/courses.length*100);
- document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressText').textContent=p+'% 완주 · '+done+'/'+courses.length;
- document.getElementById('statDone').textContent=done+'/'+courses.length;
- document.getElementById('statPlan').textContent=plan+'개';
+ const doneCourses=profile.done.filter(x=>x.startsWith('course-')).length,planCourses=profile.plan.filter(x=>x.startsWith('course-')).length;
+ const p=Math.round(doneCourses/courses.length*100);
+ document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressText').textContent=p+'% 완주 · '+doneCourses+'/'+courses.length;
+ document.getElementById('statDone').textContent=doneCourses+'/'+courses.length;
+ document.getElementById('statPlan').textContent=planCourses+'개';
  document.getElementById('departureDate').value=profile.departure;
  const pref={olle:'🥾 올레길 위주 스타일 — 걷는 날을 중심으로 코스를 골라보세요.',food:'🍽 맛집 위주 스타일 — 맛집과 코스를 함께 묶어보세요.',relax:'☕ 여유롭게 스타일 — 난이도 하 코스와 휴식일을 섞어보세요.'};
  document.getElementById('prefBanner').textContent=pref[profile.pref]||pref.olle;
  document.querySelectorAll('.pref-btn').forEach(b=>b.classList.toggle('active',b.dataset.pref===profile.pref));
+ const doneGal=profile.done.filter(x=>x.startsWith('gallery-')).length,doneFood=profile.done.filter(x=>x.startsWith('food-')).length,doneAttr=profile.done.filter(x=>x.startsWith('attr-')).length;
+ document.getElementById('otherStats').textContent=`🎨 미술관 ${doneGal}/${galleries.length} · 🍽 맛집 ${doneFood}/${allFoodItems.length} · 📷 관광지 ${doneAttr}/${allAttractionItems.length} 다녀옴`;
  renderTodayCard();
 }
 function renderTodayCard(){
