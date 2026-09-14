@@ -129,6 +129,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
   </div>
   <svg class="oreum" viewBox="0 0 400 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,46 L0,34 Q40,14 80,30 T170,26 Q210,10 250,28 T340,22 Q370,12 400,24 L400,46 Z" fill="#00000030"/></svg>
 </header>
+<div id="offlineBanner" class="hidden" style="background:#5C4A2E;color:#fff;text-align:center;padding:7px 10px;font-size:12px">📡 오프라인이에요 — 마지막으로 저장된 내용을 보여드릴게요. 인터넷이 다시 연결되면 자동으로 동기화돼요.</div>
 <nav id="tabs">
   <button class="active" data-tab="home">홈</button>
   <button data-tab="schedule" id="scheduleTabBtn">일정</button>
@@ -425,9 +426,20 @@ try{
   auth = firebase.auth();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   db = firebase.firestore();
+  db.enablePersistence({synchronizeTabs:true}).catch(e=>{
+    console.warn('Firestore 오프라인 캐시 비활성 (여러 탭 동시 열림 등):', e && e.code);
+  });
 }catch(e){
   console.error('Firebase init failed', e);
 }
+function updateOfflineBanner(){
+  const b=document.getElementById('offlineBanner');
+  if(!b)return;
+  b.classList.toggle('hidden', navigator.onLine);
+}
+window.addEventListener('online',updateOfflineBanner);
+window.addEventListener('offline',updateOfflineBanner);
+updateOfflineBanner();
 </script>
 <!-- ▲▲▲ 여기까지 ▲▲▲ -->
 
