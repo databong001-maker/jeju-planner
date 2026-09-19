@@ -245,6 +245,15 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
     <select id="mapQuickFind" style="margin-top:10px;width:100%"><option value="">🔍 코스 · 미술관 빠르게 찾기</option></select>
     <div id="mapWrap" style="margin-top:10px"></div><div id="mapSelected" class="selected">점을 눌러보세요.</div>
   </div>
+  <div class="card" style="margin-top:14px">
+    <b>🗺 실시간 지도</b>
+    <p class="small" style="margin:4px 0 10px">실제 카카오맵이에요. 위에 그림 지도와 같은 장소들이 실제 위치에 표시돼요.</p>
+    <div class="actions" style="margin-bottom:8px">
+      <button class="btn" id="mapMyLocBtn" type="button">📍 내 위치로 이동</button>
+      <button class="btn" id="mapStayBtn" type="button">🏠 숙소로 이동</button>
+    </div>
+    <div id="kakaoRealMap" style="width:100%;height:320px;border-radius:12px;overflow:hidden;background:var(--stone2)"></div>
+  </div>
   <div id="mapTimelineView" class="hidden" style="margin-top:10px">
     <p class="sub" style="margin:0 0 10px">메모 탭의 "하루 일기"에 남긴 기록이 날짜순으로 정리돼요.</p>
     <div id="timelineList"></div>
@@ -1201,6 +1210,7 @@ function renderMap(){
  wrap.querySelectorAll('.stay-node').forEach(s=>s.onclick=()=>{document.getElementById('mapSelected').textContent=`🏠 ${s.dataset.name} · ${s.dataset.range}`;pingAt(+s.dataset.x,+s.dataset.y)});
  courses.forEach(c=>{const d=wrap.querySelector(`.map-node[data-id="${c.n}"]`),line=document.getElementById('seg-'+c.n),done=profile.done.includes('course-'+c.n),plan=profile.plan.includes('course-'+c.n),col=done?'var(--done)':plan?'var(--blue)':'var(--red)';if(d)d.setAttribute('fill',col);if(line)line.setAttribute('stroke',col)});
  initMapQuickFind();
+ if(kakaoRealMapObj)renderRealMapMarkers();
 }
 function renderStayTab(){
  const el=document.getElementById('stayTabList');if(!el)return;
@@ -1733,7 +1743,7 @@ function renderTagNotes(){
  });
 }
 function renderAll(){renderPeriod();renderDday();renderHome();renderCourses();renderGalleries();renderRestaurants();renderAttractions();renderSchedule();renderMap();renderStayTab();renderStays();renderMyFoodPreview();renderMyAttractionPreview();renderPlaces();renderTagNotes();renderDiary();renderTimeline();document.getElementById('notesArea').value=profile.notes||'';renderWeather()}
-function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'});const activeBtn=document.querySelector(`#tabs button[data-tab="${id}"]`);if(activeBtn)activeBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
+function showTab(id){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'});const activeBtn=document.querySelector(`#tabs button[data-tab="${id}"]`);if(activeBtn)activeBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});if(id==='map')initRealMapIfNeeded()}
 
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 (function(){
@@ -2073,10 +2083,80 @@ if(window.kakao&&window.kakao.maps){
  kakao.maps.load(()=>{
   try{kakaoPlacesService=new kakao.maps.services.Places();console.log('카카오 Places 서비스 초기화 성공')}catch(e){console.error('카카오 Places 서비스 초기화 실패:',e&&e.message)}
   try{kakaoGeocoderService=new kakao.maps.services.Geocoder();console.log('카카오 Geocoder 서비스 초기화 성공')}catch(e){console.error('카카오 Geocoder 서비스 초기화 실패:',e&&e.message)}
+  kakaoSdkReady=true;
+  const mapBtn=document.querySelector('#tabs button[data-tab="map"]');
+  if(mapBtn&&mapBtn.classList.contains('active'))initRealMapIfNeeded();
  });
 }else{
  console.error('카카오 SDK 자체가 window.kakao로 등록되지 않음 (스크립트 로드 실패 가능성)');
 }
+// ===== 실시간 카카오맵 (지도 탭, 개념도 아래) =====
+let kakaoSdkReady=false, kakaoRealMapObj=null, kakaoRealMapInfo=null, realMapMarkers=[], myLocMarker=null;
+const pinImgCache={};
+function kakaoPinImage(hex){
+ if(pinImgCache[hex])return pinImgCache[hex];
+ const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='26' height='34' viewBox='0 0 26 34'><path d='M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z' fill='${hex}'/><circle cx='13' cy='13' r='5' fill='#fff'/></svg>`;
+ const img=new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),new kakao.maps.Size(26,34),{offset:new kakao.maps.Point(13,34)});
+ pinImgCache[hex]=img;
+ return img;
+}
+function initRealMapIfNeeded(){
+ const container=document.getElementById('kakaoRealMap');
+ if(!container)return;
+ if(!kakaoSdkReady){container.innerHTML='<p class="small" style="padding:14px">🗺 지도 불러오는 중…</p>';return}
+ if(kakaoRealMapObj){setTimeout(()=>kakaoRealMapObj.relayout(),50);return}
+ container.innerHTML='';
+ const center=new kakao.maps.LatLng(33.38,126.55);
+ kakaoRealMapObj=new kakao.maps.Map(container,{center,level:11});
+ kakaoRealMapInfo=new kakao.maps.InfoWindow({removable:true});
+ renderRealMapMarkers();
+}
+function clearRealMapMarkers(){realMapMarkers.forEach(m=>m.setMap(null));realMapMarkers=[]}
+function addRealMarker(lat,lng,hex,title){
+ if(lat==null||lng==null)return;
+ const pos=new kakao.maps.LatLng(lat,lng);
+ const marker=new kakao.maps.Marker({position:pos,image:kakaoPinImage(hex),map:kakaoRealMapObj,title});
+ kakao.maps.event.addListener(marker,'click',()=>{
+  kakaoRealMapInfo.setContent(`<div style="padding:6px 10px;font-size:12px;white-space:nowrap">${esc(title)}</div>`);
+  kakaoRealMapInfo.open(kakaoRealMapObj,marker);
+ });
+ realMapMarkers.push(marker);
+}
+function renderRealMapMarkers(){
+ if(!kakaoRealMapObj)return;
+ clearRealMapMarkers();
+ courses.forEach(c=>{
+  const id='course-'+c.n,done=profile.done.includes(id),plan=profile.plan.includes(id);
+  addRealMarker(c.start[0],c.start[1],done?'#8A8272':plan?'#3A6EA5':'#C0483A',`🥾 올레 ${c.n} · ${c.name}`);
+ });
+ galleries.forEach(g=>addRealMarker(g.loc[0],g.loc[1],'#F5008B',`🎨 ${g.name}`));
+ allFoodItems.forEach(f=>addRealMarker(f.lat,f.lng,'#E8952E',`🍽 ${f.name}`));
+ allAttractionItems.forEach(a=>addRealMarker(a.lat,a.lng,'#2FA88F',`📷 ${a.name}`));
+ (profile.stays||[]).filter(s=>s.lat!=null).forEach(s=>addRealMarker(s.lat,s.lng,'#8B5FA0',`🏠 ${s.name}`));
+ (profile.customPlaces||[]).filter(p=>p.lat!=null).forEach(p=>{
+  const hex=p.category==='sight'?'#2FA88F':p.category==='stay'?'#8B5FA0':p.category==='etc'?'#6B6456':'#E8952E';
+  const ic=p.category==='sight'?'📷':p.category==='stay'?'🏠':p.category==='etc'?'📌':'🍽';
+  addRealMarker(p.lat,p.lng,hex,`${ic} ${p.name}`);
+ });
+}
+document.getElementById('mapMyLocBtn').onclick=async()=>{
+ if(!kakaoRealMapObj)return;
+ const btn=document.getElementById('mapMyLocBtn');btn.disabled=true;btn.textContent='위치 찾는 중…';
+ const coords=await getGpsCoords();
+ btn.disabled=false;btn.textContent='📍 내 위치로 이동';
+ if(!coords){toast('위치 권한을 확인해주세요');return}
+ const pos=new kakao.maps.LatLng(coords.lat,coords.lng);
+ kakaoRealMapObj.setCenter(pos);kakaoRealMapObj.setLevel(5);
+ if(myLocMarker)myLocMarker.setMap(null);
+ myLocMarker=new kakao.maps.Marker({position:pos,image:kakaoPinImage('#1F6E74'),map:kakaoRealMapObj,title:'내 위치'});
+};
+document.getElementById('mapStayBtn').onclick=()=>{
+ if(!kakaoRealMapObj)return;
+ const d=new Date(),todayStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+ const stay=(typeof stayForDate==='function'?stayForDate(todayStr):null)||((profile.stays||[]).find(s=>s.lat!=null));
+ if(!stay||stay.lat==null){toast('위치가 등록된 숙소가 없어요');return}
+ kakaoRealMapObj.setCenter(new kakao.maps.LatLng(stay.lat,stay.lng));kakaoRealMapObj.setLevel(6);
+};
 // 카카오 키워드(상호명) 검색 — 음식점 등 업체명 찾기에 강함. 제주 지역(rect)으로 한정해 동명이인 오검색 방지.
 function kakaoKeywordSearch(query){
  return new Promise(resolve=>{
