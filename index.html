@@ -1389,7 +1389,23 @@ function wireArrivalButtons(container){
    if(!r.ok){
     const base=r.reason==='notconfigured'?'인증키가 설정되지 않았어요.':'실시간 도착정보를 불러오지 못했어요.';
     const detail=r.debug?`<br><span style="color:#B0503C">🔍 원인: ${esc(r.debug)}</span>`:'';
-    slot.innerHTML=`<p class="small">${base}${detail}<br><a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵에서 정류장 검색 →</a></p>`;
+    slot.innerHTML=`<p class="small">${base}${detail}<br>대신 카카오맵에서 이 정류장을 찾아볼게요…</p>`;
+    if(!kakaoPlacesService){
+     slot.innerHTML+=`<p class="small"><a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵에서 정류장 검색 →</a></p>`;
+     return;
+    }
+    const searchOpts=(!isNaN(lat)&&!isNaN(lng))?{location:new kakao.maps.LatLng(lat,lng),radius:2000,sort:kakao.maps.services.SortBy.DISTANCE}:{rect:'126.1,33.1,126.98,33.6'};
+    kakaoPlacesService.keywordSearch(stopName+' 정류장',(data,status)=>{
+     if(status!==kakao.maps.services.Status.OK||!data||!data.length){
+      slot.innerHTML=`<p class="small">${base}${detail}</p><p class="small">카카오 검색에서도 결과가 없어요. <a href="${kakaoSearch}" target="_blank" rel="noopener">카카오맵 앱에서 검색 →</a></p>`;
+      return;
+     }
+     const resHtml=data.slice(0,3).map(p=>{
+      const plat=parseFloat(p.y),plng=parseFloat(p.x);
+      return `<div style="margin-top:8px"><b>${esc(p.place_name)}</b><div class="small">${esc(p.road_address_name||p.address_name||'')}</div>${dirButtonsHtml(plat,plng,p.place_name)}</div>`;
+     }).join('');
+     slot.innerHTML=`<p class="small">${base}${detail}</p><p class="small" style="margin-top:6px">📍 대신 카카오맵에서 찾은 결과예요:</p>${resHtml}`;
+    },searchOpts);
     return;
    }
    if(!r.list.length){slot.innerHTML='<p class="small">현재 도착 예정인 버스가 없어요.</p>';return}
