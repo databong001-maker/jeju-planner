@@ -252,6 +252,7 @@ label{font-size:11px;color:var(--muted);font-weight:750;display:block;margin:9px
       <button class="btn" id="mapMyLocBtn" type="button">📍 내 위치로 이동</button>
       <button class="btn" id="mapStayBtn" type="button">🏠 숙소로 이동</button>
     </div>
+    <div class="seg-tabs" id="mapRegionTabs" style="margin-top:0 0 8px"></div>
     <div id="kakaoRealMap" style="width:100%;height:320px;border-radius:12px;overflow:hidden;background:var(--stone2)"></div>
   </div>
   <div id="mapTimelineView" class="hidden" style="margin-top:10px">
@@ -2107,7 +2108,37 @@ if(window.kakao&&window.kakao.maps){
  console.error('카카오 SDK 자체가 window.kakao로 등록되지 않음 (스크립트 로드 실패 가능성)');
 }
 // ===== 실시간 카카오맵 (지도 탭, 개념도 아래) =====
-let kakaoSdkReady=false, kakaoRealMapObj=null, kakaoRealMapInfo=null, realMapMarkers=[], myLocMarker=null;
+let kakaoSdkReady=false, kakaoRealMapObj=null, kakaoRealMapInfo=null, realMapMarkers=[], myLocMarker=null, activeMapRegion=null;
+const REGION_ZONES=[
+ {name:'제주시·노형',lat:33.50,lng:126.52},
+ {name:'애월',lat:33.46,lng:126.31},
+ {name:'한경·한림',lat:33.36,lng:126.24},
+ {name:'대정·모슬포',lat:33.22,lng:126.25},
+ {name:'중문·대평',lat:33.25,lng:126.42},
+ {name:'남원·서귀포',lat:33.25,lng:126.57},
+ {name:'성산·표선',lat:33.40,lng:126.85},
+ {name:'조천·구좌',lat:33.53,lng:126.72}
+];
+function nearestZone(lat,lng){
+ let best=REGION_ZONES[0],bd=Infinity;
+ REGION_ZONES.forEach(z=>{const d=Math.hypot(lat-z.lat,lng-z.lng);if(d<bd){bd=d;best=z}});
+ return best.name;
+}
+function renderMapRegionTabs(){
+ const wrap=document.getElementById('mapRegionTabs');if(!wrap)return;
+ const zones=['전체',...REGION_ZONES.map(z=>z.name)];
+ wrap.innerHTML=zones.map(z=>`<button class="seg-tab${(activeMapRegion===z||(z==='전체'&&!activeMapRegion))?' active-seg':''}" data-zone="${esc(z)}" type="button">${esc(z)}</button>`).join('');
+ wrap.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  activeMapRegion=b.dataset.zone==='전체'?null:b.dataset.zone;
+  renderMapRegionTabs();
+  renderRealMapMarkers();
+  if(kakaoRealMapObj){
+   const z=REGION_ZONES.find(z=>z.name===activeMapRegion);
+   if(z){kakaoRealMapObj.setCenter(new kakao.maps.LatLng(z.lat,z.lng));kakaoRealMapObj.setLevel(7)}
+   else{kakaoRealMapObj.setCenter(new kakao.maps.LatLng(33.38,126.55));kakaoRealMapObj.setLevel(11)}
+  }
+ });
+}
 const pinImgCache={};
 function kakaoPinImage(hex){
  if(pinImgCache[hex])return pinImgCache[hex];
@@ -2125,6 +2156,7 @@ function initRealMapIfNeeded(){
  const center=new kakao.maps.LatLng(33.38,126.55);
  kakaoRealMapObj=new kakao.maps.Map(container,{center,level:11});
  kakaoRealMapInfo=new kakao.maps.InfoWindow({removable:true});
+ renderMapRegionTabs();
  renderRealMapMarkers();
 }
 function clearRealMapMarkers(){realMapMarkers.forEach(m=>m.setMap(null));realMapMarkers=[]}
@@ -2141,15 +2173,17 @@ function addRealMarker(lat,lng,hex,title){
 function renderRealMapMarkers(){
  if(!kakaoRealMapObj)return;
  clearRealMapMarkers();
+ const inZone=(lat,lng)=>!activeMapRegion||nearestZone(lat,lng)===activeMapRegion;
  courses.forEach(c=>{
+  if(!inZone(c.start[0],c.start[1]))return;
   const id='course-'+c.n,done=profile.done.includes(id),plan=profile.plan.includes(id);
   addRealMarker(c.start[0],c.start[1],done?'#8A8272':plan?'#3A6EA5':'#C0483A',`🥾 올레 ${c.n} · ${c.name}`);
  });
- galleries.forEach(g=>addRealMarker(g.loc[0],g.loc[1],'#F5008B',`🎨 ${g.name}`));
- allFoodItems.forEach(f=>addRealMarker(f.lat,f.lng,'#E8952E',`🍽 ${f.name}`));
- allAttractionItems.forEach(a=>addRealMarker(a.lat,a.lng,'#2FA88F',`📷 ${a.name}`));
- (profile.stays||[]).filter(s=>s.lat!=null).forEach(s=>addRealMarker(s.lat,s.lng,'#8B5FA0',`🏠 ${s.name}`));
- (profile.customPlaces||[]).filter(p=>p.lat!=null).forEach(p=>{
+ galleries.forEach(g=>{if(inZone(g.loc[0],g.loc[1]))addRealMarker(g.loc[0],g.loc[1],'#F5008B',`🎨 ${g.name}`)});
+ allFoodItems.forEach(f=>{if(inZone(f.lat,f.lng))addRealMarker(f.lat,f.lng,'#E8952E',`🍽 ${f.name}`)});
+ allAttractionItems.forEach(a=>{if(inZone(a.lat,a.lng))addRealMarker(a.lat,a.lng,'#2FA88F',`📷 ${a.name}`)});
+ (profile.stays||[]).filter(s=>s.lat!=null&&inZone(s.lat,s.lng)).forEach(s=>addRealMarker(s.lat,s.lng,'#8B5FA0',`🏠 ${s.name}`));
+ (profile.customPlaces||[]).filter(p=>p.lat!=null&&inZone(p.lat,p.lng)).forEach(p=>{
   const hex=p.category==='sight'?'#2FA88F':p.category==='stay'?'#8B5FA0':p.category==='etc'?'#6B6456':'#E8952E';
   const ic=p.category==='sight'?'📷':p.category==='stay'?'🏠':p.category==='etc'?'📌':'🍽';
   addRealMarker(p.lat,p.lng,hex,`${ic} ${p.name}`);
